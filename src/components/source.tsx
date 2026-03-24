@@ -14,7 +14,7 @@ function Source({ href, children, className }: SourceProps) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={cn('group inline-block', className)}
+      className={cn('group relative inline-block', className)}
     >
       {children}
     </a>

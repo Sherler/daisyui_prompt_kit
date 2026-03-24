@@ -3,32 +3,37 @@
 import { cn } from '@/utils/cn'
 
 export type TextShimmerProps = {
-  text: string
-  className?: string
+  as?: string
   duration?: number
   spread?: number
-}
+  children: React.ReactNode
+} & React.HTMLAttributes<HTMLElement>
 
 function TextShimmer({
-  text,
+  as = 'span',
   className,
   duration = 4,
-  spread = 2,
+  spread = 20,
+  children,
+  ...props
 }: TextShimmerProps) {
+  const dynamicSpread = Math.min(Math.max(spread, 5), 45)
+  const Component = as as React.ElementType
+
   return (
-    <span
+    <Component
       className={cn(
-        'bg-gradient-to-r from-base-content/40 via-primary to-base-content/40 bg-clip-text text-transparent',
-        'bg-[length:200%_auto] animate-shimmer',
+        'bg-[length:200%_auto] bg-clip-text font-medium text-transparent animate-shimmer',
         className
       )}
       style={{
+        backgroundImage: `linear-gradient(to right, rgb(from var(--color-base-content) r g b / 0.45) ${50 - dynamicSpread}%, var(--color-primary) 50%, rgb(from var(--color-base-content) r g b / 0.45) ${50 + dynamicSpread}%)`,
         animationDuration: `${duration}s`,
-        backgroundSize: `${spread * 100}% 100%`,
       }}
+      {...props}
     >
-      {text}
-    </span>
+      {children}
+    </Component>
   )
 }
 

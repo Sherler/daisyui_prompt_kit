@@ -12,8 +12,8 @@ export type PromptSuggestionProps = {
 
 function PromptSuggestion({
   children,
-  variant = 'outline',
-  size = 'md',
+  variant,
+  size,
   highlight,
   className,
   ...props
@@ -30,45 +30,98 @@ function PromptSuggestion({
     ghost: 'btn btn-ghost',
   }
 
-  // Highlight mode
-  if (highlight) {
-    const text = children as string
-    const parts = text.split(new RegExp(`(${highlight})`, 'gi'))
+  const isHighlightMode = highlight !== undefined && highlight.trim() !== ''
+  const content = typeof children === 'string' ? children : ''
 
+  if (!isHighlightMode) {
     return (
       <button
         type="button"
         className={cn(
-          'btn btn-ghost btn-sm justify-start text-left h-auto py-2 px-3',
+          'rounded-full',
+          variantClasses[variant || 'outline'],
+          sizeClasses[size || 'lg'],
           className
         )}
         {...props}
       >
-        {parts.map((part, i) =>
-          part.toLowerCase() === highlight.toLowerCase() ? (
-            <span key={i} className="text-primary font-medium">
-              {part}
-            </span>
-          ) : (
-            <span key={i}>{part}</span>
-          )
-        )}
+        {children}
       </button>
     )
   }
+
+  if (!content) {
+    return (
+      <button
+        type="button"
+        className={cn(
+          'btn btn-ghost btn-sm h-auto w-full cursor-pointer justify-start rounded-xl py-2 text-left hover:bg-base-200',
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </button>
+    )
+  }
+
+  const trimmedHighlight = highlight.trim()
+  const contentLower = content.toLowerCase()
+  const highlightLower = trimmedHighlight.toLowerCase()
+  const shouldHighlight = contentLower.includes(highlightLower)
 
   return (
     <button
       type="button"
       className={cn(
-        'rounded-full',
-        sizeClasses[size],
-        variantClasses[variant],
+        'btn btn-ghost btn-sm h-auto w-full cursor-pointer justify-start gap-0 rounded-xl py-2 text-left hover:bg-base-200',
         className
       )}
       {...props}
     >
-      {children}
+      {shouldHighlight ? (
+        (() => {
+          const index = contentLower.indexOf(highlightLower)
+
+          if (index === -1) {
+            return (
+              <span className="text-base-content/70 whitespace-pre-wrap">
+                {content}
+              </span>
+            )
+          }
+
+          const actualHighlightedText = content.substring(
+            index,
+            index + highlightLower.length
+          )
+
+          const before = content.substring(0, index)
+          const after = content.substring(index + actualHighlightedText.length)
+
+          return (
+            <>
+              {before && (
+                <span className="text-base-content/70 whitespace-pre-wrap">
+                  {before}
+                </span>
+              )}
+              <span className="text-primary font-medium whitespace-pre-wrap">
+                {actualHighlightedText}
+              </span>
+              {after && (
+                <span className="text-base-content/70 whitespace-pre-wrap">
+                  {after}
+                </span>
+              )}
+            </>
+          )
+        })()
+      ) : (
+        <span className="text-base-content/70 whitespace-pre-wrap">
+          {content}
+        </span>
+      )}
     </button>
   )
 }

@@ -1,7 +1,6 @@
 'use client'
 
 import { cn } from '@/utils/cn'
-import { Loader2, Brain } from 'lucide-react'
 
 export type ThinkingBarProps = {
   isThinking?: boolean
@@ -26,12 +25,12 @@ function ThinkingBar({
     >
       {isThinking ? (
         <>
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <span className="icon-[lucide--loader-circle] h-4 w-4 animate-spin" aria-hidden="true" />
           <span className="text-sm font-medium">{text}</span>
         </>
       ) : (
         <>
-          <Brain className="w-4 h-4" />
+          <span className="icon-[lucide--brain] h-4 w-4" aria-hidden="true" />
           <span className="text-sm font-medium">Done</span>
         </>
       )}

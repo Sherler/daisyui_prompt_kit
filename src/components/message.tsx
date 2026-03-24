@@ -3,6 +3,13 @@
 import { cn } from '@/utils/cn'
 import { Markdown } from './markdown'
 
+const TOOLTIP_SIDE_CLASSES = {
+  top: 'bottom-full left-1/2 mb-2 -translate-x-1/2',
+  bottom: 'top-full left-1/2 mt-2 -translate-x-1/2',
+  left: 'right-full top-1/2 mr-2 -translate-y-1/2',
+  right: 'left-full top-1/2 ml-2 -translate-y-1/2',
+} as const
+
 export type MessageProps = {
   children: React.ReactNode
   className?: string
@@ -26,7 +33,6 @@ const MessageAvatar = ({
   src,
   alt,
   fallback,
-  delayMs,
   className,
 }: MessageAvatarProps) => {
   return (
@@ -58,7 +64,7 @@ const MessageContent = ({
   ...props
 }: MessageContentProps) => {
   const classNames = cn(
-    'bg-base-200 rounded-lg p-3 text-base-content prose prose-sm max-w-none break-words whitespace-normal',
+    'prose prose-sm max-w-none rounded-lg bg-secondary p-2 text-secondary-content break-words whitespace-normal',
     className
   )
 
@@ -102,17 +108,29 @@ const MessageAction = ({
   ...props
 }: MessageActionProps) => {
   return (
-    <div className="tooltip" data-tip={tooltip}>
+    <div className="group relative inline-flex">
       <button
         type="button"
         className={cn(
           'btn btn-xs btn-square btn-ghost opacity-60 hover:opacity-100',
-          className
         )}
+        aria-label={typeof tooltip === 'string' ? tooltip : undefined}
         {...props}
       >
         {children}
       </button>
+      {tooltip ? (
+        <div
+          role="tooltip"
+          className={cn(
+            'pointer-events-none absolute z-10 max-w-xs rounded-md bg-neutral px-2 py-1 text-xs text-neutral-content opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-within:opacity-100',
+            TOOLTIP_SIDE_CLASSES[side],
+            className
+          )}
+        >
+          {tooltip}
+        </div>
+      ) : null}
     </div>
   )
 }

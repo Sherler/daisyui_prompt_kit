@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import dts from 'vite-plugin-dts'
 import { resolve } from 'path'
 
@@ -8,6 +9,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
+      tailwindcss(),
       react(),
       ...(isLib ? [dts({ include: ['src'] })] : []),
     ],
@@ -18,10 +20,13 @@ export default defineConfig(({ mode }) => {
     },
     build: isLib
       ? {
+          outDir: 'dist',
+          emptyOutDir: true,
           lib: {
             entry: resolve(__dirname, 'src/index.ts'),
             formats: ['es'],
             fileName: 'index',
+            cssFileName: 'styles',
           },
           rollupOptions: {
             external: ['react', 'react-dom', 'react/jsx-runtime'],

@@ -9,4 +9,5 @@ export { useTextStream } from './hooks'
 export type { UseTextStreamOptions, UseTextStreamReturn } from './hooks'
 
 // Import styles
+import 'katex/dist/katex.min.css'
 import './styles.css'

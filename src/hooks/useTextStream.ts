@@ -40,11 +40,12 @@ export function useTextStream({
   const [displayedText, setDisplayedText] = useState('')
   const [isComplete, setIsComplete] = useState(false)
   const [segments, setSegments] = useState<{ text: string; index: number }[]>([])
-  const [isPaused, setIsPaused] = useState(false)
-  
-  const animationRef = useRef<number>()
+  const [, setIsPaused] = useState(false)
+
+  const timerRef = useRef<number | undefined>(undefined)
   const textRef = useRef('')
   const currentIndexRef = useRef(0)
+  const pausedRef = useRef(false)
 
   const calculatedChunkSize = characterChunkSize ?? Math.max(1, Math.floor(speed / 5))
   const calculatedFadeDuration = fadeDuration ?? Math.max(200, 1000 - speed * 8)
@@ -54,8 +55,8 @@ export function useTextStream({
   const getSegmentDelay = useCallback(() => calculatedSegmentDelay, [calculatedSegmentDelay])
 
   const reset = useCallback(() => {
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current)
+    if (timerRef.current) {
+      window.clearTimeout(timerRef.current)
     }
     setDisplayedText('')
     setIsComplete(false)
@@ -63,93 +64,96 @@ export function useTextStream({
     textRef.current = ''
     currentIndexRef.current = 0
     setIsPaused(false)
+    pausedRef.current = false
   }, [])
 
   const pause = useCallback(() => {
     setIsPaused(true)
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current)
-    }
+    pausedRef.current = true
   }, [])
 
   const resume = useCallback(() => {
     setIsPaused(false)
+    pausedRef.current = false
   }, [])
 
   const startStreaming = useCallback(async () => {
     reset()
-    
+
     try {
       let fullText = ''
-      
+
       if (typeof textStream === 'string') {
         fullText = textStream
       } else {
         for await (const chunk of textStream) {
           fullText += chunk
-          if (!isPaused) {
+          if (!pausedRef.current) {
             textRef.current = fullText
           }
         }
       }
-      
+
       textRef.current = fullText
-      
+
       if (mode === 'typewriter') {
         const animate = () => {
-          if (isPaused) {
-            animationRef.current = requestAnimationFrame(animate)
+          if (pausedRef.current) {
+            timerRef.current = window.setTimeout(animate, speed)
             return
           }
-          
+
           const remaining = textRef.current.slice(currentIndexRef.current)
           const chunk = remaining.slice(0, calculatedChunkSize)
-          
+
           if (chunk) {
             currentIndexRef.current += chunk.length
             setDisplayedText(textRef.current.slice(0, currentIndexRef.current))
-            animationRef.current = requestAnimationFrame(animate)
+            timerRef.current = window.setTimeout(animate, speed)
           } else {
             setIsComplete(true)
             onComplete?.()
           }
         }
-        
-        animationRef.current = requestAnimationFrame(animate)
+
+        timerRef.current = window.setTimeout(animate, speed)
       } else if (mode === 'fade') {
-        // For fade mode, split into words/segments
-        const words = fullText.split(/(\s+)/)
-        const newSegments = words.map((text, index) => ({ text, index }))
-        setSegments(newSegments)
-        
+        const newSegments = fullText
+          .split(/(\s+)/)
+          .filter((segment) => segment.length > 0)
+          .map((text, index) => ({ text, index }))
+
+        setSegments([])
+
         let currentSegment = 0
         const showNextSegment = () => {
-          if (isPaused) {
-            setTimeout(showNextSegment, calculatedSegmentDelay)
+          if (pausedRef.current) {
+            timerRef.current = window.setTimeout(showNextSegment, calculatedSegmentDelay)
             return
           }
-          
+
           if (currentSegment < newSegments.length) {
+            setSegments((previous) => [...previous, newSegments[currentSegment]])
             setDisplayedText(prev => prev + newSegments[currentSegment].text)
             currentSegment++
-            setTimeout(showNextSegment, calculatedSegmentDelay)
+            timerRef.current = window.setTimeout(showNextSegment, calculatedSegmentDelay)
           } else {
             setIsComplete(true)
             onComplete?.()
           }
         }
-        
+
         showNextSegment()
       }
     } catch (error) {
       onError?.(error)
     }
-  }, [textStream, mode, calculatedChunkSize, calculatedSegmentDelay, isPaused, onComplete, onError, reset])
+  }, [textStream, mode, calculatedChunkSize, calculatedSegmentDelay, onComplete, onError, reset, speed])
 
   useEffect(() => {
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
+      if (timerRef.current) {
+        window.clearTimeout(timerRef.current)
       }
     }
   }, [])

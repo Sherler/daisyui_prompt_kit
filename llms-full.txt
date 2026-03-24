@@ -1,176 +1,775 @@
 # DaisyUI Prompt Kit
 
-A React component library for AI chat interfaces, built with DaisyUI 5.5.14, React 19, and TailwindCSS 4.
+`@daisyui/prompt-kit` is a React component library for AI chat interfaces.
+
+It is designed for DaisyUI 5.5.14, React 19.2.4, and Tailwind CSS 4.1.18.
+
+This package is a DaisyUI-native alternative to the original shadcn-based prompt-kit. Do not introduce shadcn components when using this library.
+
+## Core Rules
+
+1. Use DaisyUI component classes and Tailwind utility classes only.
+2. Do not add shadcn primitives or Radix wrappers around these components unless you are intentionally extending the API.
+3. Prefer composing the exported primitives instead of rewriting the same UI from scratch.
+4. For chat layouts, use `ChatContainerRoot` and `ChatContainerContent` together.
+5. For input areas, use `PromptInput` with `PromptInputTextarea` and optional action buttons.
+6. For AI output, prefer `Message`, `Markdown`, `CodeBlock`, `ResponseStream`, `Tool`, `Reasoning`, and `Source` in combination.
+7. For theme consistency, use DaisyUI semantic colors like `primary`, `secondary`, `base-100`, and `base-content`.
 
 ## Installation
 
+### Package
+
 ```bash
 npm install @daisyui/prompt-kit
+```
+
+### Requirements
+
+- React 19.2.4
+- React DOM 19.2.4
+- DaisyUI 5.5.14
+- Tailwind CSS 4.1.18
+
+### Styles
+
+The package entry imports its own styles.
+
+If your bundler removes CSS side effects, also import:
+
+```tsx
+import '@daisyui/prompt-kit/styles'
+```
+
+## Recommended Usage Pattern
+
+```tsx
+import {
+  ChatContainerRoot,
+  ChatContainerContent,
+  Message,
+  MessageAvatar,
+  MessageContent,
+  PromptInput,
+  PromptInputTextarea,
+  PromptInputActions,
+  PromptInputAction,
+  ScrollButton,
+} from '@daisyui/prompt-kit'
+
+export function ChatScreen() {
+  return (
+    <div className="flex h-[720px] flex-col gap-4">
+      <ChatContainerRoot className="min-h-0 flex-1 rounded-box border border-base-300 bg-base-100">
+        <ChatContainerContent className="gap-4 p-4">
+          <Message>
+            <MessageAvatar fallback="AI" />
+            <MessageContent markdown>
+              {'Hello. I can help you build an agent workflow.'}
+            </MessageContent>
+          </Message>
+        </ChatContainerContent>
+      </ChatContainerRoot>
+
+      <div className="flex justify-center">
+        <ScrollButton variant="primary" />
+      </div>
+
+      <PromptInput onSubmit={() => {}}>
+        <PromptInputTextarea placeholder="Ask the agent to do something" />
+        <PromptInputActions>
+          <PromptInputAction tooltip="Attach file">+</PromptInputAction>
+        </PromptInputActions>
+      </PromptInput>
+    </div>
+  )
+}
 ```
 
 ## Components
 
 ### PromptInput
 
-AI input component with auto-resizing textarea.
+Use `PromptInput` for the chat composer shell.
+
+#### Exports
+
+- `PromptInput`
+- `PromptInputTextarea`
+- `PromptInputActions`
+- `PromptInputAction`
+
+#### Example
 
 ```tsx
-import { PromptInput, PromptInputTextarea, PromptInputActions, PromptInputAction } from '@daisyui/prompt-kit'
-
-<PromptInput value={value} onValueChange={setValue} onSubmit={handleSubmit}>
-  <PromptInputTextarea placeholder="Type message..." />
+<PromptInput
+  value={value}
+  onValueChange={setValue}
+  onSubmit={handleSubmit}
+  isLoading={isSending}
+>
+  <PromptInputTextarea placeholder="Type your message" />
   <PromptInputActions>
-    <PromptInputAction tooltip="Image"><ImageIcon /></PromptInputAction>
+    <PromptInputAction tooltip="Upload file">+</PromptInputAction>
+    <PromptInputAction tooltip="Send">Send</PromptInputAction>
   </PromptInputActions>
 </PromptInput>
 ```
 
+#### Props
+
+- `PromptInput.isLoading?: boolean`
+- `PromptInput.value?: string`
+- `PromptInput.onValueChange?: (value: string) => void`
+- `PromptInput.maxHeight?: number | string`
+- `PromptInput.onSubmit?: () => void`
+- `PromptInput.disabled?: boolean`
+- `PromptInput.children: React.ReactNode`
+- `PromptInputTextarea.disableAutosize?: boolean`
+- `PromptInputAction.tooltip?: React.ReactNode`
+- `PromptInputAction.side?: 'top' | 'bottom' | 'left' | 'right'`
+
+#### Behavior Rules
+
+- Pressing `Enter` submits.
+- Pressing `Shift+Enter` inserts a newline.
+- The textarea auto-resizes unless `disableAutosize` is true.
+- `PromptInputAction` stops event bubbling so button clicks do not refocus the outer shell.
+
 ### Message
 
-Display messages with avatar, content, and actions.
+Use `Message` to render user or assistant messages.
+
+#### Exports
+
+- `Message`
+- `MessageAvatar`
+- `MessageContent`
+- `MessageActions`
+- `MessageAction`
+
+#### Example
 
 ```tsx
-import { Message, MessageAvatar, MessageContent, MessageActions, MessageAction } from '@daisyui/prompt-kit'
-
-<Message>
+<Message className="items-start">
   <MessageAvatar fallback="AI" />
-  <MessageContent>Hello!</MessageContent>
-  <MessageActions>
-    <MessageAction tooltip="Copy"><CopyIcon /></MessageAction>
-  </MessageActions>
+  <div className="space-y-2">
+    <MessageContent markdown>
+      {'Here is a **formatted** answer with `inline code`.'}
+    </MessageContent>
+    <MessageActions>
+      <MessageAction tooltip="Copy">Copy</MessageAction>
+      <MessageAction tooltip="Retry">Retry</MessageAction>
+    </MessageActions>
+  </div>
 </Message>
 ```
 
-### ChatContainer
+#### Props
 
-Auto-scrolling chat container.
+- `Message.children: React.ReactNode`
+- `MessageAvatar.src?: string`
+- `MessageAvatar.alt?: string`
+- `MessageAvatar.fallback?: string`
+- `MessageContent.markdown?: boolean`
+- `MessageAction.tooltip?: React.ReactNode`
+- `MessageAction.side?: 'top' | 'bottom' | 'left' | 'right'`
+
+#### Behavior Rules
+
+- Set `markdown` on `MessageContent` when the message contains formatted model output.
+- Use `MessageActions` for secondary controls such as copy, regenerate, pin, or feedback.
+
+### Chat Container
+
+Use the chat container primitives to create a sticky-bottom transcript.
+
+#### Exports
+
+- `ChatContainerRoot`
+- `ChatContainerContent`
+- `ChatContainerScrollAnchor`
+
+#### Example
 
 ```tsx
-import { ChatContainerRoot, ChatContainerContent, ScrollButton } from '@daisyui/prompt-kit'
-
-<ChatContainerRoot>
-  <ChatContainerContent>
-    {messages.map(m => <Message key={m.id}>{m.content}</Message>)}
+<ChatContainerRoot className="h-[560px] rounded-box border border-base-300 bg-base-100">
+  <ChatContainerContent className="gap-4 p-4">
+    {messages.map((message) => (
+      <Message key={message.id}>{message.content}</Message>
+    ))}
+    <ChatContainerScrollAnchor />
   </ChatContainerContent>
-  <ScrollButton />
 </ChatContainerRoot>
 ```
 
-### CodeBlock
+#### Behavior Rules
 
-Syntax highlighted code display.
+- `ChatContainerRoot` owns the scrolling region.
+- `ChatContainerContent` holds the vertical message stack.
+- `ChatContainerScrollAnchor` is useful when you want an explicit target near the bottom.
+
+### ScrollButton
+
+Use `ScrollButton` with `ChatContainerRoot` to jump back to the latest content.
+
+#### Example
 
 ```tsx
-import { CodeBlock, CodeBlockCode } from '@daisyui/prompt-kit'
+<div className="fixed bottom-6 right-6">
+  <ScrollButton variant="primary" size="md" />
+</div>
+```
 
+#### Props
+
+- `variant?: 'default' | 'primary' | 'secondary' | 'ghost'`
+- `size?: 'xs' | 'sm' | 'md'`
+
+#### Behavior Rules
+
+- The button hides itself when the transcript is already at the bottom.
+- Your custom `onClick` still runs after the scroll action.
+
+### CodeBlock
+
+Use code blocks for syntax-highlighted model output.
+
+#### Exports
+
+- `CodeBlock`
+- `CodeBlockCode`
+- `CodeBlockGroup`
+
+#### Example
+
+```tsx
 <CodeBlock>
-  <CodeBlockCode code={code} language="tsx" />
+  <CodeBlockGroup>
+    <span className="text-xs text-base-content/60">tsx</span>
+    <button className="btn btn-ghost btn-xs">Copy</button>
+  </CodeBlockGroup>
+  <CodeBlockCode code={source} language="tsx" theme="github-light" />
 </CodeBlock>
 ```
 
+#### Props
+
+- `CodeBlockCode.code: string`
+- `CodeBlockCode.language?: string`
+- `CodeBlockCode.theme?: string`
+
+#### Behavior Rules
+
+- `CodeBlockCode` uses Shiki for syntax highlighting.
+- Wrap metadata or actions inside `CodeBlockGroup`.
+
 ### Markdown
 
-Markdown rendering with code highlighting.
+Use `Markdown` to render LLM output containing headings, lists, tables, blockquotes, or fenced code blocks.
+
+#### Example
 
 ```tsx
-import { Markdown } from '@daisyui/prompt-kit'
-
-<Markdown>{markdownContent}</Markdown>
+<Markdown>
+  {`# Plan\n\n- Build components\n- Run tests\n- Publish package`}
+</Markdown>
 ```
+
+#### Props
+
+- `children: string`
+- `id?: string`
+- `className?: string`
+- `components?: Partial<Components>`
+
+#### Behavior Rules
+
+- Pass actual newline characters in the markdown string. Escaped sequences like `\n` render as plain text.
+- Fenced code blocks are rendered with `CodeBlock` and `CodeBlockCode`.
+- Inline code uses a compact pill-like style.
+- GitHub Flavored Markdown tables are enabled through `remark-gfm`.
+- Large tables should be rendered inside a horizontally scrollable container style such as `markdown-content`.
+- Inline and block math formulas are rendered through `remark-math` and `rehype-katex`.
+- `remark-gfm` and `remark-breaks` are enabled.
 
 ### Loader
 
-Loading indicators.
+Use `Loader` for streaming and background task indicators.
+
+#### Example
 
 ```tsx
-import { Loader } from '@daisyui/prompt-kit'
-
-<Loader variant="circular" />
-<Loader variant="dots" />
-<Loader variant="typing" />
-<Loader variant="wave" />
+<Loader variant="typing" size="md" />
 ```
 
-### Reasoning
+#### Props
 
-Collapsible reasoning display.
+- `variant?: 'circular' | 'classic' | 'pulse' | 'pulse-dot' | 'dots' | 'typing' | 'wave' | 'bars' | 'terminal' | 'text-blink' | 'text-shimmer' | 'loading-dots'`
+- `size?: 'sm' | 'md' | 'lg'`
+- `text?: string`
 
-```tsx
-import { Reasoning, ReasoningTrigger, ReasoningContent } from '@daisyui/prompt-kit'
+#### Behavior Rules
 
-<Reasoning>
-  <ReasoningTrigger>View Thinking</ReasoningTrigger>
-  <ReasoningContent>Reasoning content...</ReasoningContent>
-</Reasoning>
-```
-
-### PromptSuggestion
-
-Prompt suggestion buttons.
-
-```tsx
-import { PromptSuggestion } from '@daisyui/prompt-kit'
-
-<PromptSuggestion>Explain hooks</PromptSuggestion>
-<PromptSuggestion highlight="React">Build React app</PromptSuggestion>
-```
-
-### Tool
-
-Tool call visualization.
-
-```tsx
-import { Tool } from '@daisyui/prompt-kit'
-
-<Tool toolPart={{ type: 'search', state: 'completed', toolCallId: '1' }} />
-```
-
-### Steps
-
-Progress steps component.
-
-```tsx
-import { Steps } from '@daisyui/prompt-kit'
-
-<Steps steps={[
-  { id: '1', title: 'Step 1', status: 'completed' },
-  { id: '2', title: 'Step 2', status: 'loading' },
-]} />
-```
-
-### SystemMessage
-
-Alert messages.
-
-```tsx
-import { SystemMessage } from '@daisyui/prompt-kit'
-
-<SystemMessage variant="info">Info message</SystemMessage>
-<SystemMessage variant="success">Success!</SystemMessage>
-<SystemMessage variant="warning">Warning</SystemMessage>
-<SystemMessage variant="error">Error!</SystemMessage>
-```
+- All official prompt-kit loader variants are supported.
+- `text` is primarily used by `text-blink`, `text-shimmer`, and `loading-dots`.
+- `terminal` intentionally renders a prompt-like cursor instead of a text label.
 
 ### TextShimmer
 
-Animated shimmer text.
+Use `TextShimmer` when you want a lightweight animated emphasis treatment for loading labels or assistant status text.
+
+#### Example
 
 ```tsx
-import { TextShimmer } from '@daisyui/prompt-kit'
-
-<TextShimmer text="Loading..." />
+<TextShimmer as="p" duration={4} spread={20}>
+  Loading amazing content...
+</TextShimmer>
 ```
+
+#### Props
+
+- `as?: string`
+- `duration?: number`
+- `spread?: number`
+- `children: React.ReactNode`
+
+#### Behavior Rules
+
+- `spread` is clamped to a practical range so the shimmer band stays readable.
+- Use `children` instead of a dedicated `text` prop so inline formatting remains possible.
+
+### Reasoning
+
+Use `Reasoning` for collapsible model reasoning or intermediate notes.
+
+#### Exports
+
+- `Reasoning`
+- `ReasoningTrigger`
+- `ReasoningContent`
+
+#### Example
+
+```tsx
+<Reasoning isStreaming={isThinking}>
+  <ReasoningTrigger>View reasoning</ReasoningTrigger>
+  <ReasoningContent markdown>
+    {'The model is checking the latest tool outputs before answering.'}
+  </ReasoningContent>
+</Reasoning>
+```
+
+#### Props
+
+- `Reasoning.open?: boolean`
+- `Reasoning.onOpenChange?: (open: boolean) => void`
+- `Reasoning.isStreaming?: boolean`
+- `ReasoningContent.markdown?: boolean`
+- `ReasoningContent.contentClassName?: string`
+
+#### Behavior Rules
+
+- When `isStreaming` becomes true, the section auto-opens once.
+- When streaming finishes, the auto-opened section closes again unless the consumer controls `open`.
+- `ReasoningContent` animates `max-height` for a compact expand and collapse effect.
+
+### PromptSuggestion
+
+Use `PromptSuggestion` for suggested starter prompts and quick actions.
+
+#### Example
+
+```tsx
+<div className="flex flex-wrap gap-2">
+  <PromptSuggestion>Summarize the repository</PromptSuggestion>
+  <PromptSuggestion highlight="React">
+    Build a React dashboard for agent runs
+  </PromptSuggestion>
+</div>
+```
+
+#### Props
+
+- `variant?: 'default' | 'outline' | 'ghost'`
+- `size?: 'sm' | 'md' | 'lg'`
+- `highlight?: string`
+
+#### Behavior Rules
+
+- Without `highlight`, the component renders as a rounded suggestion chip and defaults to outline styling.
+- With `highlight`, it switches to a full-width list-item style and highlights only the first case-insensitive match.
+- If `children` is not a plain string in highlight mode, the component falls back to rendering the content without text splitting.
+
+### ResponseStream
+
+Use `ResponseStream` to progressively reveal text.
+
+#### Example
+
+```tsx
+<ResponseStream textStream={responseText} mode="typewriter" speed={20} />
+```
+
+#### Props
+
+- `textStream: string | AsyncIterable<string>`
+- `mode?: 'typewriter' | 'fade'`
+- `speed?: number`
+- `onComplete?: () => void`
+- `fadeDuration?: number`
+- `segmentDelay?: number`
+- `characterChunkSize?: number`
+
+#### Behavior Rules
+
+- `typewriter` mode reveals text progressively based on `speed`.
+- `fade` mode reveals segments one by one.
+- For fully custom streaming logic, use `useTextStream` directly.
+
+### FileUpload
+
+Use file upload primitives to attach files to prompts.
+
+#### Exports
+
+- `FileUpload`
+- `FileUploadTrigger`
+- `FileUploadContent`
+
+#### Example
+
+```tsx
+<FileUpload onFilesAdded={handleFiles} accept="image/*,.pdf">
+  <FileUploadTrigger className="btn btn-outline btn-sm">Attach</FileUploadTrigger>
+  <FileUploadContent className="rounded-box p-3">
+    <p className="text-sm text-base-content/70">Drop files here or click Attach</p>
+  </FileUploadContent>
+</FileUpload>
+```
+
+#### Props
+
+- `FileUpload.onFilesAdded: (files: File[]) => void`
+- `FileUpload.multiple?: boolean`
+- `FileUpload.accept?: string`
+- `FileUpload.disabled?: boolean`
+- `FileUploadTrigger.asChild?: boolean`
+
+#### Behavior Rules
+
+- The hidden file input is triggered from `FileUploadTrigger`.
+- Dragging files over the window opens `FileUploadContent` as a global overlay.
+- When `multiple` is false, only the first dropped or selected file is forwarded.
+
+### JSXPreview
+
+Use `JSXPreview` to render JSX strings, including partially streamed JSX.
+
+#### Example
+
+```tsx
+<JSXPreview jsx={'<div className="badge badge-primary">Ready</div>'} />
+```
+
+#### Props
+
+- `jsx: string`
+- `isStreaming?: boolean`
+
+#### Behavior Rules
+
+- When `isStreaming` is true, the component attempts to close incomplete tags before rendering.
+
+### Tool
+
+Use `Tool` to display tool calls and their status.
+
+#### Example
+
+```tsx
+<Tool
+  toolPart={{
+    type: 'web_search',
+    state: 'output-available',
+    toolCallId: 'call_1',
+    input: { query: 'daisyui modal docs' },
+    output: { results: 3 },
+  }}
+/>
+```
+
+#### Props
+
+- `toolPart.type: string`
+- `toolPart.state: 'input-streaming' | 'input-available' | 'output-available' | 'output-error'`
+- `toolPart.input?: Record<string, unknown>`
+- `toolPart.output?: Record<string, unknown>`
+- `toolPart.errorText?: string`
+- `toolPart.toolCallId?: string`
+- `defaultOpen?: boolean`
+
+#### Behavior Rules
+
+- `input-streaming` shows a processing state before the tool input fully settles.
+- `output-available` and `output-error` expose the result payload or error payload in the expandable body.
+- Input and output values are formatted as readable text while preserving JSON structure.
+
+### Source
+
+Use `Source` for citations, links, and source previews.
+
+#### Exports
+
+- `Source`
+- `SourceTrigger`
+- `SourceContent`
+
+#### Example
+
+```tsx
+<Source href="https://daisyui.com/components/modal/">
+  <SourceTrigger label="daisyui.com" showFavicon />
+  <SourceContent
+    title="Modal"
+    description="DaisyUI modal component documentation."
+  />
+</Source>
+```
+
+#### Behavior Rules
+
+- `Source` is positioned relatively so the hover card can anchor correctly.
+- `SourceTrigger` can optionally show a favicon.
+
+### ChainOfThought
+
+Use `ChainOfThought` for a simple collapsible explanation card.
+
+#### Example
+
+```tsx
+<ChainOfThought defaultOpen title="Planning trace">
+  <p>1. Inspect workspace</p>
+  <p>2. Compare APIs</p>
+  <p>3. Patch packaging issues</p>
+</ChainOfThought>
+```
+
+#### Props
+
+- `defaultOpen?: boolean`
+- `title?: string`
+
+### FeedbackBar
+
+Use `FeedbackBar` for copy, regenerate, thumbs up, and thumbs down actions.
+
+#### Example
+
+```tsx
+<FeedbackBar
+  onCopy={handleCopy}
+  onRegenerate={handleRetry}
+  onThumbsUp={handleUpvote}
+  onThumbsDown={handleDownvote}
+/>
+```
+
+### Image
+
+Use `Image` for generated media, uploaded images, or assistant attachments.
+
+#### Example
+
+```tsx
+<Image
+  src="https://picsum.photos/800/450"
+  alt="Preview"
+  aspectRatio="video"
+  containerClassName="max-w-xl"
+/>
+```
+
+#### Props
+
+- `src: string`
+- `alt?: string`
+- `aspectRatio?: 'auto' | 'square' | 'video' | 'portrait'`
+- `containerClassName?: string`
+
+### Steps
+
+Use `Steps` to display collapsible multi-step traces in agent workflows.
+
+#### Example
+
+```tsx
+<Steps defaultOpen>
+  <StepsTrigger>Agent run: Summarize repository</StepsTrigger>
+  <StepsContent>
+    <StepsItem>Searching files in repo...</StepsItem>
+    <StepsItem>Parsing markdown and code blocks</StepsItem>
+    <StepsItem className="text-base-content">Summary generated</StepsItem>
+  </StepsContent>
+</Steps>
+```
+
+#### Exports
+
+- `Steps`
+- `StepsTrigger`
+- `StepsContent`
+- `StepsItem`
+- `StepsBar`
+
+#### Props
+
+- `Steps.defaultOpen?: boolean`
+- `Steps.open?: boolean`
+- `Steps.onOpenChange?: (open: boolean) => void`
+- `StepsTrigger.leftIcon?: React.ReactNode`
+- `StepsTrigger.swapIconOnHover?: boolean`
+- `StepsContent.bar?: React.ReactNode`
+
+#### Behavior Rules
+
+- `Steps` supports controlled and uncontrolled open state.
+- `StepsContent` renders a two-column layout with a vertical bar and stacked items.
+- `StepsTrigger` can either show a default chevron or swap a custom leading icon on hover.
+
+### SystemMessage
+
+Use `SystemMessage` for status, warnings, errors, and neutral system feedback.
+
+#### Example
+
+```tsx
+<SystemMessage variant="warning">
+  The current model response is still streaming.
+</SystemMessage>
+```
+
+#### Variants
+
+- `info`
+- `success`
+- `warning`
+- `error`
+
+### TextShimmer
+
+Use `TextShimmer` for animated labels or loading headlines.
+
+#### Example
+
+```tsx
+<TextShimmer as="p" duration={3.2} spread={20}>
+  Generating UI
+</TextShimmer>
+```
+
+#### Props
+
+- `as?: string`
+- `duration?: number`
+- `spread?: number`
+- `children: React.ReactNode`
 
 ### ThinkingBar
 
-AI thinking indicator.
+Use `ThinkingBar` to show an active model-thinking state.
+
+#### Example
 
 ```tsx
-import { ThinkingBar } from '@daisyui/prompt-kit'
-
-<ThinkingBar isThinking={true} />
+<ThinkingBar isThinking text="Analyzing files..." />
 ```
 
-## License
+#### Props
 
-MIT
+- `isThinking?: boolean`
+- `text?: string`
+
+## Hooks
+
+### useTextStream
+
+Use the hook when you need lower-level control over progressive text rendering.
+
+#### Example
+
+```tsx
+const { displayedText, isComplete, startStreaming, pause, resume } = useTextStream({
+  textStream,
+  mode: 'typewriter',
+  speed: 20,
+})
+```
+
+#### Return Value
+
+- `displayedText`
+- `isComplete`
+- `segments`
+- `getFadeDuration()`
+- `getSegmentDelay()`
+- `reset()`
+- `startStreaming()`
+- `pause()`
+- `resume()`
+
+## Composition Guidance
+
+### Minimal Chat UI
+
+Use:
+
+- `ChatContainerRoot`
+- `ChatContainerContent`
+- `Message`
+- `PromptInput`
+- `ScrollButton`
+
+### Rich Assistant Message
+
+Use:
+
+- `Message`
+- `MessageAvatar`
+- `MessageContent markdown`
+- `CodeBlock`
+- `Source`
+- `FeedbackBar`
+
+### Tool-Calling Agent View
+
+Use:
+
+- `Message`
+- `Tool`
+- `Steps`
+- `Reasoning`
+- `ThinkingBar`
+
+### File-Enhanced Composer
+
+Use:
+
+- `FileUpload`
+- `PromptInput`
+- `PromptInputActions`
+- `PromptInputAction`
+
+## Demo Project
+
+The companion demo app for this library is expected to run on port `3005`.
+
+Its purpose is to visually verify every exported component before publishing.
+
+## Final Notes
+
+1. Keep the API DaisyUI-native.
+2. Prefer semantic DaisyUI colors over hard-coded Tailwind palette values.
+3. Use composition rather than introducing a second design system.
+4. When in doubt, match the behavior of the original prompt-kit while keeping the implementation idiomatic for DaisyUI and React.

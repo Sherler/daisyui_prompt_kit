@@ -1,87 +1,172 @@
 'use client'
 
 import { cn } from '@/utils/cn'
-import { Check, Loader2 } from 'lucide-react'
+import React, { createContext, useContext, useMemo, useState } from 'react'
 
-export type StepStatus = 'pending' | 'loading' | 'completed' | 'error'
-
-export type Step = {
-  id: string
-  title: string
-  description?: string
-  status: StepStatus
+type StepsContextValue = {
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
 }
 
-export type StepsProps = {
-  steps: Step[]
-  className?: string
+const StepsContext = createContext<StepsContextValue | null>(null)
+
+function useStepsContext() {
+  const context = useContext(StepsContext)
+
+  if (!context) {
+    throw new Error('Steps components must be used within Steps')
+  }
+
+  return context
 }
 
-function Steps({ steps, className }: StepsProps) {
+export type StepsItemProps = React.ComponentProps<'div'>
+
+export const StepsItem = ({
+  children,
+  className,
+  ...props
+}: StepsItemProps) => (
+  <div className={cn('text-base-content/70 text-sm', className)} {...props}>
+    {children}
+  </div>
+)
+
+export type StepsTriggerProps = React.ComponentProps<'button'> & {
+  leftIcon?: React.ReactNode
+  swapIconOnHover?: boolean
+}
+
+export const StepsTrigger = ({
+  children,
+  className,
+  leftIcon,
+  swapIconOnHover = true,
+  onClick,
+  ...props
+}: StepsTriggerProps) => {
+  const { isOpen, onOpenChange } = useStepsContext()
+
   return (
-    <div className={cn('space-y-3', className)}>
-      {steps.map((step, index) => (
-        <div key={step.id} className="flex items-start gap-3">
-          <div className="flex flex-col items-center">
-            <StepIcon status={step.status} />
-            {index < steps.length - 1 && (
-              <div
-                className={cn(
-                  'w-0.5 h-full min-h-[24px] mt-1',
-                  step.status === 'completed' ? 'bg-success' : 'bg-base-300'
-                )}
-              />
-            )}
-          </div>
-          <div className="flex-1 pb-4">
-            <div
+    <button
+      type="button"
+      className={cn(
+        'group flex w-full cursor-pointer items-center justify-start gap-1 text-sm text-base-content/70 transition-colors hover:text-base-content',
+        className,
+      )}
+      data-state={isOpen ? 'open' : 'closed'}
+      onClick={(event) => {
+        onOpenChange(!isOpen)
+        onClick?.(event)
+      }}
+      {...props}
+    >
+      <div className="flex items-center gap-2">
+        {leftIcon ? (
+          <span className="relative inline-flex size-4 items-center justify-center">
+            <span
               className={cn(
-                'font-medium text-sm',
-                step.status === 'completed' && 'text-success',
-                step.status === 'loading' && 'text-primary',
-                step.status === 'error' && 'text-error'
+                'transition-opacity',
+                swapIconOnHover && 'group-hover:opacity-0',
               )}
             >
-              {step.title}
-            </div>
-            {step.description && (
-              <div className="text-sm text-base-content/70 mt-0.5">{step.description}</div>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
+              {leftIcon}
+            </span>
+            {swapIconOnHover ? (
+              <span
+                className={cn(
+                  'icon-[lucide--chevron-down] absolute size-4 opacity-0 transition-all group-hover:opacity-100',
+                  isOpen && 'rotate-180',
+                )}
+                aria-hidden="true"
+              />
+            ) : null}
+          </span>
+        ) : null}
+        <span>{children}</span>
+      </div>
+      {!leftIcon ? (
+        <span
+          className={cn('size-4 transition-transform', isOpen && 'rotate-180')}
+          aria-hidden="true"
+        />
+      ) : null}
+    </button>
   )
 }
 
-function StepIcon({ status }: { status: StepStatus }) {
-  const config = {
-    pending: { bg: 'bg-base-300', text: 'text-base-content/50', icon: null },
-    loading: { bg: 'bg-primary/20', text: 'text-primary', icon: Loader2 },
-    completed: { bg: 'bg-success/20', text: 'text-success', icon: Check },
-    error: { bg: 'bg-error/20', text: 'text-error', icon: null },
-  }
+export type StepsContentProps = React.ComponentProps<'div'> & {
+  bar?: React.ReactNode
+}
 
-  const { bg, text, icon: Icon } = config[status]
+export const StepsContent = ({
+  children,
+  className,
+  bar,
+  ...props
+}: StepsContentProps) => {
+  const { isOpen } = useStepsContext()
 
   return (
     <div
-      className={cn(
-        'w-6 h-6 rounded-full flex items-center justify-center',
-        bg,
-        text,
-        status === 'loading' && 'animate-pulse'
-      )}
+      className={cn('overflow-hidden', !isOpen && 'hidden', className)}
+      data-state={isOpen ? 'open' : 'closed'}
+      {...props}
     >
-      {Icon ? (
-        <Icon className={cn('w-3.5 h-3.5', status === 'loading' && 'animate-spin')} />
-      ) : status === 'error' ? (
-        <span className="text-xs font-bold">!</span>
-      ) : (
-        <span className="w-2 h-2 rounded-full bg-current opacity-50" />
-      )}
+      <div className="mt-3 grid min-w-0 max-w-full grid-cols-[min-content_minmax(0,1fr)] items-start gap-x-3">
+        <div className="min-w-0 self-stretch">{bar ?? <StepsBar />}</div>
+        <div className="min-w-0 space-y-2">{children}</div>
+      </div>
     </div>
   )
 }
 
-export { Steps }
+export type StepsBarProps = React.HTMLAttributes<HTMLDivElement>
+
+export const StepsBar = ({ className, ...props }: StepsBarProps) => (
+  <div
+    className={cn('h-full w-[2px] bg-base-300', className)}
+    aria-hidden
+    {...props}
+  />
+)
+
+export type StepsProps = React.ComponentProps<'div'> & {
+  defaultOpen?: boolean
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}
+
+export function Steps({
+  defaultOpen = true,
+  open,
+  onOpenChange,
+  className,
+  children,
+  ...props
+}: StepsProps) {
+  const [internalOpen, setInternalOpen] = useState(defaultOpen)
+  const isControlled = open !== undefined
+  const isOpen = isControlled ? open : internalOpen
+
+  const value = useMemo(
+    () => ({
+      isOpen,
+      onOpenChange: (nextOpen: boolean) => {
+        if (!isControlled) {
+          setInternalOpen(nextOpen)
+        }
+        onOpenChange?.(nextOpen)
+      },
+    }),
+    [isControlled, isOpen, onOpenChange],
+  )
+
+  return (
+    <StepsContext.Provider value={value}>
+      <div className={cn(className)} data-state={isOpen ? 'open' : 'closed'} {...props}>
+        {children}
+      </div>
+    </StepsContext.Provider>
+  )
+}

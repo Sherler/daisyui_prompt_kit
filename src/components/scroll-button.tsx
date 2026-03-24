@@ -2,7 +2,6 @@
 
 import { cn } from '@/utils/cn'
 import { useStickToBottomContext } from 'use-stick-to-bottom'
-import { ChevronDown } from 'lucide-react'
 
 export type ScrollButtonProps = {
   className?: string
@@ -14,6 +13,7 @@ function ScrollButton({
   className,
   variant = 'ghost',
   size = 'sm',
+  onClick,
   ...props
 }: ScrollButtonProps) {
   const { isAtBottom, scrollToBottom } = useStickToBottomContext()
@@ -43,10 +43,13 @@ function ScrollButton({
           : 'pointer-events-none translate-y-4 scale-95 opacity-0',
         className
       )}
-      onClick={() => scrollToBottom()}
+      onClick={(event) => {
+        scrollToBottom()
+        onClick?.(event)
+      }}
       {...props}
     >
-      <ChevronDown className="h-5 w-5" />
+      <span className="icon-[lucide--chevron-down] h-5 w-5" aria-hidden="true" />
     </button>
   )
 }

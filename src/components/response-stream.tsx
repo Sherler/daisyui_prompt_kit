@@ -1,6 +1,5 @@
 'use client'
 
-import { cn } from '@/utils/cn'
 import { useTextStream, type TextStreamMode } from '@/hooks/useTextStream'
 import { useEffect } from 'react'
 
@@ -25,7 +24,7 @@ function ResponseStream({
   segmentDelay,
   characterChunkSize,
 }: ResponseStreamProps) {
-  const { displayedText, isComplete, segments, startStreaming } = useTextStream({
+  const { displayedText, segments, startStreaming } = useTextStream({
     textStream,
     speed,
     mode,

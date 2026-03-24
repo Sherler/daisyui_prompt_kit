@@ -27,6 +27,13 @@ function usePromptInput() {
   return useContext(PromptInputContext)
 }
 
+const TOOLTIP_SIDE_CLASSES = {
+  top: 'tooltip-top',
+  bottom: 'tooltip-bottom',
+  left: 'tooltip-left',
+  right: 'tooltip-right',
+} as const
+
 export type PromptInputProps = {
   isLoading?: boolean
   value?: string
@@ -188,9 +195,13 @@ function PromptInputAction({
   ...props
 }: PromptInputActionProps) {
   const { disabled } = usePromptInput()
+  const tooltipText = typeof tooltip === 'string' ? tooltip : undefined
 
   return (
-    <div className="tooltip" data-tip={tooltip}>
+    <div
+      className={cn(tooltipText && 'tooltip', tooltipText && TOOLTIP_SIDE_CLASSES[side])}
+      data-tip={tooltipText}
+    >
       <button
         type="button"
         className={cn(

@@ -1,7 +1,6 @@
 'use client'
 
 import { cn } from '@/utils/cn'
-import { AlertCircle, AlertTriangle, CheckCircle, Info } from 'lucide-react'
 
 export type SystemMessageVariant = 'info' | 'success' | 'warning' | 'error'
 
@@ -23,30 +22,30 @@ function SystemMessage({
       bg: 'bg-info/10',
       border: 'border-info/20',
       text: 'text-info',
-      icon: Info,
+      icon: <span className="icon-[lucide--info] h-4 w-4" aria-hidden="true" />,
     },
     success: {
       bg: 'bg-success/10',
       border: 'border-success/20',
       text: 'text-success',
-      icon: CheckCircle,
+      icon: <span className="icon-[lucide--circle-check-big] h-4 w-4" aria-hidden="true" />,
     },
     warning: {
       bg: 'bg-warning/10',
       border: 'border-warning/20',
       text: 'text-warning',
-      icon: AlertTriangle,
+      icon: <span className="icon-[lucide--triangle-alert] h-4 w-4" aria-hidden="true" />,
     },
     error: {
       bg: 'bg-error/10',
       border: 'border-error/20',
       text: 'text-error',
-      icon: AlertCircle,
+      icon: <span className="icon-[lucide--circle-alert] h-4 w-4" aria-hidden="true" />,
     },
   }
 
-  const { bg, border, text, icon: DefaultIcon } = config[variant]
-  const IconComponent = icon || <DefaultIcon className="w-4 h-4" />
+  const { bg, border, text, icon: defaultIcon } = config[variant]
+  const iconNode = icon || defaultIcon
 
   return (
     <div
@@ -57,7 +56,7 @@ function SystemMessage({
         className
       )}
     >
-      <div className={cn('shrink-0 mt-0.5', text)}>{IconComponent}</div>
+      <div className={cn('shrink-0 mt-0.5', text)}>{iconNode}</div>
       <div className={cn('text-sm flex-1', text)}>{children}</div>
     </div>
   )

@@ -3,9 +3,11 @@
 import { cn } from '@/utils/cn'
 import { marked } from 'marked'
 import { memo, useId, useMemo } from 'react'
+import rehypeKatex from 'rehype-katex'
 import ReactMarkdown, { Components } from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
 import { CodeBlock, CodeBlockCode } from './code-block'
 
 export type MarkdownProps = {
@@ -34,22 +36,22 @@ const INITIAL_COMPONENTS: Partial<Components> = {
 
     if (isInline) {
       return (
-        <code
+        <span
           className={cn(
-            'bg-base-200 rounded px-1.5 py-0.5 font-mono text-sm',
+            'bg-base-200 rounded-sm px-1 font-mono text-sm',
             className
           )}
           {...props}
         >
           {children}
-        </code>
+        </span>
       )
     }
 
     const language = extractLanguage(className)
 
     return (
-      <CodeBlock className="my-4">
+      <CodeBlock className={className}>
         <CodeBlockCode code={children as string} language={language} />
       </CodeBlock>
     )
@@ -69,7 +71,8 @@ const MemoizedMarkdownBlock = memo(
   }) {
     return (
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkBreaks]}
+        remarkPlugins={[remarkGfm, remarkBreaks, remarkMath]}
+        rehypePlugins={[rehypeKatex]}
         components={components}
       >
         {content}
@@ -94,7 +97,7 @@ function MarkdownComponent({
   const blocks = useMemo(() => parseMarkdownIntoBlocks(children), [children])
 
   return (
-    <div className={cn('markdown-content', className)}>
+    <div className={className}>
       {blocks.map((block, index) => (
         <MemoizedMarkdownBlock
           key={`${blockId}-block-${index}`}

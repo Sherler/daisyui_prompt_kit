@@ -1,30 +1,33 @@
 'use client'
 
 import { cn } from '@/utils/cn'
-import React, { createContext, useContext, useRef, useState } from 'react'
+import {
+  Children,
+  cloneElement,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
+import { createPortal } from 'react-dom'
 
-type FileUploadContextType = {
+type FileUploadContextValue = {
   isDragging: boolean
-  setIsDragging: (value: boolean) => void
   inputRef: React.RefObject<HTMLInputElement | null>
+  multiple?: boolean
+  disabled?: boolean
 }
 
-const FileUploadContext = createContext<FileUploadContextType>({
-  isDragging: false,
-  setIsDragging: () => {},
-  inputRef: { current: null },
-})
-
-function useFileUpload() {
-  return useContext(FileUploadContext)
-}
+const FileUploadContext = createContext<FileUploadContextValue | null>(null)
 
 export type FileUploadProps = {
   onFilesAdded: (files: File[]) => void
   children: React.ReactNode
   multiple?: boolean
   accept?: string
-  className?: string
+  disabled?: boolean
 }
 
 function FileUpload({
@@ -32,114 +35,161 @@ function FileUpload({
   children,
   multiple = true,
   accept,
-  className,
+  disabled = false,
 }: FileUploadProps) {
-  const [isDragging, setIsDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const dragCounter = useRef(0)
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }
+  const handleFiles = useCallback(
+    (files: FileList) => {
+      const newFiles = Array.from(files)
+      if (multiple) {
+        onFilesAdded(newFiles)
+      } else {
+        onFilesAdded(newFiles.slice(0, 1))
+      }
+    },
+    [multiple, onFilesAdded],
+  )
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-
-    const files = Array.from(e.dataTransfer.files)
-    if (files.length > 0) {
-      onFilesAdded(files)
+  useEffect(() => {
+    if (disabled) {
+      return undefined
     }
-  }
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    if (files.length > 0) {
-      onFilesAdded(files)
+    const handleDrag = (event: DragEvent) => {
+      event.preventDefault()
+      event.stopPropagation()
     }
-    e.target.value = ''
+
+    const handleDragIn = (event: DragEvent) => {
+      handleDrag(event)
+      dragCounter.current += 1
+      if (event.dataTransfer?.items.length) setIsDragging(true)
+    }
+
+    const handleDragOut = (event: DragEvent) => {
+      handleDrag(event)
+      dragCounter.current -= 1
+      if (dragCounter.current === 0) setIsDragging(false)
+    }
+
+    const handleDrop = (event: DragEvent) => {
+      handleDrag(event)
+      setIsDragging(false)
+      dragCounter.current = 0
+      if (event.dataTransfer?.files.length) {
+        handleFiles(event.dataTransfer.files)
+      }
+    }
+
+    window.addEventListener('dragenter', handleDragIn)
+    window.addEventListener('dragleave', handleDragOut)
+    window.addEventListener('dragover', handleDrag)
+    window.addEventListener('drop', handleDrop)
+
+    return () => {
+      window.removeEventListener('dragenter', handleDragIn)
+      window.removeEventListener('dragleave', handleDragOut)
+      window.removeEventListener('dragover', handleDrag)
+      window.removeEventListener('drop', handleDrop)
+    }
+  }, [disabled, handleFiles])
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files?.length) {
+      handleFiles(event.target.files)
+      event.target.value = ''
+    }
   }
 
   return (
-    <FileUploadContext.Provider value={{ isDragging, setIsDragging, inputRef }}>
-      <div
-        className={cn('relative', className)}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        <input
-          ref={inputRef}
-          type="file"
-          className="hidden"
-          multiple={multiple}
-          accept={accept}
-          onChange={handleFileSelect}
-        />
-        {children}
-      </div>
+    <FileUploadContext.Provider value={{ isDragging, inputRef, multiple, disabled }}>
+      <input
+        type="file"
+        ref={inputRef}
+        onChange={handleFileSelect}
+        className="hidden"
+        multiple={multiple}
+        accept={accept}
+        aria-hidden
+        disabled={disabled}
+      />
+      {children}
     </FileUploadContext.Provider>
   )
 }
 
-export type FileUploadTriggerProps = {
+export type FileUploadTriggerProps = React.ComponentPropsWithoutRef<'button'> & {
   asChild?: boolean
-  className?: string
-  children: React.ReactNode
-} & React.ComponentPropsWithoutRef<'button'>
+}
 
 function FileUploadTrigger({
-  asChild,
+  asChild = false,
   className,
   children,
-  onClick,
   ...props
 }: FileUploadTriggerProps) {
-  const { inputRef } = useFileUpload()
+  const context = useContext(FileUploadContext)
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    inputRef.current?.click()
-    onClick?.(e)
+  const handleClick = () => {
+    if (!context?.disabled) {
+      context?.inputRef.current?.click()
+    }
   }
 
   if (asChild) {
-    return (
-      <div onClick={handleClick} className={className}>
-        {children}
-      </div>
-    )
+    const child = Children.only(children) as React.ReactElement<React.HTMLAttributes<HTMLElement>>
+    return cloneElement(child, {
+      ...props,
+      role: 'button',
+      className: cn(className, child.props.className),
+      onClick: (event: React.MouseEvent) => {
+        event.stopPropagation()
+        handleClick()
+        child.props.onClick?.(event as React.MouseEvent<HTMLElement>)
+      },
+    })
   }
 
   return (
-    <button type="button" className={className} onClick={handleClick} {...props}>
+    <button
+      type="button"
+      className={className}
+      onClick={handleClick}
+      disabled={context?.disabled}
+      {...props}
+    >
       {children}
     </button>
   )
 }
 
-export type FileUploadContentProps = {
-  className?: string
-} & React.HTMLAttributes<HTMLDivElement>
+export type FileUploadContentProps = React.HTMLAttributes<HTMLDivElement>
 
-function FileUploadContent({ className, children, ...props }: FileUploadContentProps) {
-  const { isDragging } = useFileUpload()
+function FileUploadContent({ className, ...props }: FileUploadContentProps) {
+  const context = useContext(FileUploadContext)
+  const [mounted, setMounted] = useState(false)
 
-  return (
+  useEffect(() => {
+    setMounted(true)
+    return () => setMounted(false)
+  }, [])
+
+  if (!context?.isDragging || !mounted || context.disabled) {
+    return null
+  }
+
+  return createPortal(
     <div
       className={cn(
-        'transition-all duration-200',
-        isDragging && 'bg-primary/10 border-primary border-2 border-dashed rounded-lg',
-        className
+        'fixed inset-0 z-50 flex items-center justify-center bg-base-100/80 backdrop-blur-sm animate-fade-in',
+        className,
       )}
       {...props}
-    >
-      {children}
-    </div>
+    />,
+    document.body,
   )
 }
 

@@ -1,7 +1,6 @@
 'use client'
 
 import { cn } from '@/utils/cn'
-import { ChevronDown } from 'lucide-react'
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { Markdown } from './markdown'
 
@@ -78,7 +77,7 @@ function ReasoningTrigger({ children, className, ...props }: ReasoningTriggerPro
     >
       <span className="text-primary">{children}</span>
       <div className={cn('transform transition-transform', isOpen ? 'rotate-180' : '')}>
-        <ChevronDown className="w-4 h-4" />
+        <span className="icon-[lucide--chevron-down] h-4 w-4" aria-hidden="true" />
       </div>
     </button>
   )

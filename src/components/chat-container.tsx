@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/utils/cn'
-import { StickToBottom, useStickToBottomContext } from 'use-stick-to-bottom'
+import { StickToBottom } from 'use-stick-to-bottom'
 
 export type ChatContainerRootProps = {
   children: React.ReactNode

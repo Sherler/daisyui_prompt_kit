@@ -4,6 +4,21 @@ import { cn } from '@/utils/cn'
 import React, { useEffect, useState } from 'react'
 import { codeToHtml } from 'shiki'
 
+function getPreferredCodeTheme() {
+  if (typeof window === 'undefined') {
+    return 'github-light'
+  }
+
+  const root = document.documentElement
+  const explicitTheme = root.getAttribute('data-theme')
+  const colorScheme = getComputedStyle(root).colorScheme
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+
+  const isDark = explicitTheme === 'dark' || colorScheme === 'dark' || prefersDark
+
+  return isDark ? 'github-dark' : 'github-light'
+}
+
 export type CodeBlockProps = {
   children?: React.ReactNode
   className?: string
@@ -13,8 +28,7 @@ function CodeBlock({ children, className, ...props }: CodeBlockProps) {
   return (
     <div
       className={cn(
-        'not-prose flex w-full flex-col overflow-hidden',
-        'card card-border bg-base-100',
+        'not-prose flex w-full flex-col overflow-clip rounded-xl border border-base-300 bg-base-100',
         className
       )}
       {...props}
@@ -34,11 +48,39 @@ export type CodeBlockCodeProps = {
 function CodeBlockCode({
   code,
   language = 'tsx',
-  theme = 'github-light',
+  theme,
   className,
   ...props
 }: CodeBlockCodeProps) {
   const [highlightedHtml, setHighlightedHtml] = useState<string | null>(null)
+  const [resolvedTheme, setResolvedTheme] = useState(theme ?? 'github-light')
+
+  useEffect(() => {
+    if (theme) {
+      setResolvedTheme(theme)
+      return undefined
+    }
+
+    const updateTheme = () => {
+      setResolvedTheme(getPreferredCodeTheme())
+    }
+
+    updateTheme()
+
+    const observer = new MutationObserver(updateTheme)
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'class', 'style'],
+    })
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    mediaQuery.addEventListener?.('change', updateTheme)
+
+    return () => {
+      observer.disconnect()
+      mediaQuery.removeEventListener?.('change', updateTheme)
+    }
+  }, [theme])
 
   useEffect(() => {
     async function highlight() {
@@ -47,14 +89,17 @@ function CodeBlockCode({
         return
       }
 
-      const html = await codeToHtml(code, { lang: language, theme })
+      const html = await codeToHtml(code, {
+        lang: language,
+        theme: resolvedTheme,
+      })
       setHighlightedHtml(html)
     }
     highlight()
-  }, [code, language, theme])
+  }, [code, language, resolvedTheme])
 
   const classNames = cn(
-    'w-full overflow-x-auto text-[13px] [&>pre]:px-4 [&>pre]:py-4',
+    'w-full overflow-x-auto text-[13px] [&>pre]:m-0 [&>pre]:px-4 [&>pre]:py-4 [&_.shiki]:m-0 [&_.shiki]:min-w-full',
     className
   )
 
