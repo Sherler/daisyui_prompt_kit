@@ -1,0 +1,176 @@
+# DaisyUI Prompt Kit
+
+A React component library for AI chat interfaces, built with DaisyUI 5.5.14, React 19, and TailwindCSS 4.
+
+## Installation
+
+```bash
+npm install @daisyui/prompt-kit
+```
+
+## Components
+
+### PromptInput
+
+AI input component with auto-resizing textarea.
+
+```tsx
+import { PromptInput, PromptInputTextarea, PromptInputActions, PromptInputAction } from '@daisyui/prompt-kit'
+
+<PromptInput value={value} onValueChange={setValue} onSubmit={handleSubmit}>
+  <PromptInputTextarea placeholder="Type message..." />
+  <PromptInputActions>
+    <PromptInputAction tooltip="Image"><ImageIcon /></PromptInputAction>
+  </PromptInputActions>
+</PromptInput>
+```
+
+### Message
+
+Display messages with avatar, content, and actions.
+
+```tsx
+import { Message, MessageAvatar, MessageContent, MessageActions, MessageAction } from '@daisyui/prompt-kit'
+
+<Message>
+  <MessageAvatar fallback="AI" />
+  <MessageContent>Hello!</MessageContent>
+  <MessageActions>
+    <MessageAction tooltip="Copy"><CopyIcon /></MessageAction>
+  </MessageActions>
+</Message>
+```
+
+### ChatContainer
+
+Auto-scrolling chat container.
+
+```tsx
+import { ChatContainerRoot, ChatContainerContent, ScrollButton } from '@daisyui/prompt-kit'
+
+<ChatContainerRoot>
+  <ChatContainerContent>
+    {messages.map(m => <Message key={m.id}>{m.content}</Message>)}
+  </ChatContainerContent>
+  <ScrollButton />
+</ChatContainerRoot>
+```
+
+### CodeBlock
+
+Syntax highlighted code display.
+
+```tsx
+import { CodeBlock, CodeBlockCode } from '@daisyui/prompt-kit'
+
+<CodeBlock>
+  <CodeBlockCode code={code} language="tsx" />
+</CodeBlock>
+```
+
+### Markdown
+
+Markdown rendering with code highlighting.
+
+```tsx
+import { Markdown } from '@daisyui/prompt-kit'
+
+<Markdown>{markdownContent}</Markdown>
+```
+
+### Loader
+
+Loading indicators.
+
+```tsx
+import { Loader } from '@daisyui/prompt-kit'
+
+<Loader variant="circular" />
+<Loader variant="dots" />
+<Loader variant="typing" />
+<Loader variant="wave" />
+```
+
+### Reasoning
+
+Collapsible reasoning display.
+
+```tsx
+import { Reasoning, ReasoningTrigger, ReasoningContent } from '@daisyui/prompt-kit'
+
+<Reasoning>
+  <ReasoningTrigger>View Thinking</ReasoningTrigger>
+  <ReasoningContent>Reasoning content...</ReasoningContent>
+</Reasoning>
+```
+
+### PromptSuggestion
+
+Prompt suggestion buttons.
+
+```tsx
+import { PromptSuggestion } from '@daisyui/prompt-kit'
+
+<PromptSuggestion>Explain hooks</PromptSuggestion>
+<PromptSuggestion highlight="React">Build React app</PromptSuggestion>
+```
+
+### Tool
+
+Tool call visualization.
+
+```tsx
+import { Tool } from '@daisyui/prompt-kit'
+
+<Tool toolPart={{ type: 'search', state: 'completed', toolCallId: '1' }} />
+```
+
+### Steps
+
+Progress steps component.
+
+```tsx
+import { Steps } from '@daisyui/prompt-kit'
+
+<Steps steps={[
+  { id: '1', title: 'Step 1', status: 'completed' },
+  { id: '2', title: 'Step 2', status: 'loading' },
+]} />
+```
+
+### SystemMessage
+
+Alert messages.
+
+```tsx
+import { SystemMessage } from '@daisyui/prompt-kit'
+
+<SystemMessage variant="info">Info message</SystemMessage>
+<SystemMessage variant="success">Success!</SystemMessage>
+<SystemMessage variant="warning">Warning</SystemMessage>
+<SystemMessage variant="error">Error!</SystemMessage>
+```
+
+### TextShimmer
+
+Animated shimmer text.
+
+```tsx
+import { TextShimmer } from '@daisyui/prompt-kit'
+
+<TextShimmer text="Loading..." />
+```
+
+### ThinkingBar
+
+AI thinking indicator.
+
+```tsx
+import { ThinkingBar } from '@daisyui/prompt-kit'
+
+<ThinkingBar isThinking={true} />
+```
+
+## License
+
+MIT

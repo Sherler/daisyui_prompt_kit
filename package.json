@@ -1,0 +1,65 @@
+{
+  "name": "@daisyui/prompt-kit",
+  "version": "0.1.0",
+  "description": "A DaisyUI-based React component library for AI chat interfaces",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./styles": "./dist/styles.css"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "build:lib": "tsc && vite build --mode lib",
+    "preview": "vite preview",
+    "demo": "cd demo && vite --port 3005"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "marked": "^15.0.7",
+    "react-jsx-parser": "^2.4.0",
+    "react-markdown": "^10.1.0",
+    "remark-breaks": "^4.0.0",
+    "remark-gfm": "^4.0.1",
+    "shiki": "^3.0.0",
+    "tailwind-merge": "^3.0.1",
+    "use-stick-to-bottom": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^4.3.4",
+    "daisyui": "^5.5.14",
+    "lucide-react": "^0.475.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "tailwindcss": "4.1.18",
+    "typescript": "~5.7.2",
+    "vite": "^6.1.0",
+    "vite-plugin-dts": "^4.5.0"
+  },
+  "keywords": [
+    "react",
+    "daisyui",
+    "tailwindcss",
+    "ai",
+    "chat",
+    "components",
+    "prompt-kit"
+  ],
+  "license": "MIT"
+}
