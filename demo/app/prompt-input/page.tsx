@@ -37,8 +37,9 @@ export default function PromptInputPage() {
   }
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files) return
-    setFiles((current) => [...current, ...Array.from(event.target.files)])
+    const files = event.target.files
+    if (!files) return
+    setFiles((current) => [...current, ...Array.from(files)])
   }
 
   const handleRemoveFile = (index: number) => {

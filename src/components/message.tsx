@@ -1,5 +1,6 @@
 'use client'
 
+import * as React from 'react'
 import { cn } from '@/utils/cn'
 import { Markdown } from './markdown'
 

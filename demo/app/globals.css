@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @source "../../src/**/*.tsx";
+@plugin "@iconify/tailwind4";
 @plugin "@tailwindcss/typography";
 @plugin "daisyui" {
   themes: light --default, dark --prefersdark;
