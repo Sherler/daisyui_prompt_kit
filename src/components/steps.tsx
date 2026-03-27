@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/utils/cn'
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { createContext, useContext, useMemo, useState } from 'react'
 
 type StepsContextValue = {
   isOpen: boolean
@@ -106,49 +106,22 @@ export const StepsContent = ({
   ...props
 }: StepsContentProps) => {
   const { isOpen } = useStepsContext()
-  const contentRef = useRef<HTMLDivElement>(null)
-  const innerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!contentRef.current || !innerRef.current) {
-      return
-    }
-
-    if (typeof ResizeObserver === 'undefined') {
-      return
-    }
-
-    const observer = new ResizeObserver(() => {
-      if (contentRef.current && innerRef.current && isOpen) {
-        contentRef.current.style.maxHeight = `${innerRef.current.scrollHeight}px`
-      }
-    })
-
-    observer.observe(innerRef.current)
-
-    if (isOpen && contentRef.current && innerRef.current) {
-      contentRef.current.style.maxHeight = `${innerRef.current.scrollHeight}px`
-    }
-
-    return () => {
-      observer.disconnect()
-    }
-  }, [isOpen])
 
   return (
     <div
-      ref={contentRef}
-      className={cn('overflow-hidden transition-[max-height] duration-150 ease-out', className)}
+      className={cn(
+        'grid transition-[grid-template-rows] duration-300 ease-in-out',
+        className,
+      )}
       data-state={isOpen ? 'open' : 'closed'}
-      style={{ maxHeight: isOpen ? contentRef.current?.scrollHeight : '0px' }}
+      style={{ gridTemplateRows: isOpen ? '1fr' : '0fr' }}
       {...props}
     >
-      <div
-        ref={innerRef}
-        className="mt-3 grid min-w-0 max-w-full grid-cols-[min-content_minmax(0,1fr)] items-start gap-x-3"
-      >
-        <div className="min-w-0 self-stretch">{bar ?? <StepsBar />}</div>
-        <div className="min-w-0 space-y-2">{children}</div>
+      <div className="min-h-0 overflow-hidden">
+        <div className="mt-3 grid min-w-0 max-w-full grid-cols-[min-content_minmax(0,1fr)] items-start gap-x-3">
+          <div className="min-w-0 self-stretch">{bar ?? <StepsBar />}</div>
+          <div className="min-w-0 space-y-2">{children}</div>
+        </div>
       </div>
     </div>
   )

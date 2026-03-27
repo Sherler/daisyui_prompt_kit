@@ -4,8 +4,6 @@ import { cn } from '@/utils/cn'
 import React, {
   createContext,
   useContext,
-  useEffect,
-  useRef,
   useState,
 } from 'react'
 
@@ -122,50 +120,23 @@ export const ChainOfThoughtContent = ({
   ...props
 }: ChainOfThoughtContentProps) => {
   const { isOpen } = useChainOfThoughtStepContext()
-  const contentRef = useRef<HTMLDivElement>(null)
-  const innerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!contentRef.current || !innerRef.current) {
-      return
-    }
-
-    if (typeof ResizeObserver === 'undefined') {
-      return
-    }
-
-    const observer = new ResizeObserver(() => {
-      if (contentRef.current && innerRef.current && isOpen) {
-        contentRef.current.style.maxHeight = `${innerRef.current.scrollHeight}px`
-      }
-    })
-
-    observer.observe(innerRef.current)
-
-    if (isOpen && contentRef.current && innerRef.current) {
-      contentRef.current.style.maxHeight = `${innerRef.current.scrollHeight}px`
-    }
-
-    return () => {
-      observer.disconnect()
-    }
-  }, [isOpen])
 
   return (
     <div
       className={cn(
-        'overflow-hidden transition-[max-height] duration-150 ease-out',
+        'grid transition-[grid-template-rows] duration-300 ease-in-out',
         className,
       )}
       data-state={isOpen ? 'open' : 'closed'}
-      ref={contentRef}
-      style={{ maxHeight: isOpen ? contentRef.current?.scrollHeight : '0px' }}
+      style={{ gridTemplateRows: isOpen ? '1fr' : '0fr' }}
       {...props}
     >
-      <div ref={innerRef} className="grid grid-cols-[min-content_minmax(0,1fr)] gap-x-4">
-        <div className="ml-[7px] h-full w-px bg-primary/20 group-data-[last=true]:hidden" />
-        <div className="ml-[7px] h-full w-px bg-transparent group-data-[last=false]:hidden" />
-        <div className="mt-2 min-w-0 space-y-2">{children}</div>
+      <div className="min-h-0 overflow-hidden">
+        <div className="grid grid-cols-[min-content_minmax(0,1fr)] gap-x-4">
+          <div className="ml-[7px] h-full w-px bg-primary/20 group-data-[last=true]:hidden" />
+          <div className="ml-[7px] h-full w-px bg-transparent group-data-[last=false]:hidden" />
+          <div className="mt-2 min-w-0 space-y-2">{children}</div>
+        </div>
       </div>
     </div>
   )

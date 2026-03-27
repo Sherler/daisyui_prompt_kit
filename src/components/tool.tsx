@@ -86,53 +86,58 @@ function Tool({ toolPart, defaultOpen = false, className }: ToolProps) {
         </div>
       </button>
 
-      {isOpen ? (
-        <div className="border-t border-base-300 bg-base-100 p-3">
-          <div className="space-y-3">
-            {input && Object.keys(input).length > 0 ? (
-              <div>
-                <h4 className="mb-2 text-sm font-medium text-base-content/70">Input</h4>
-                <div className="rounded border border-base-300 bg-base-100 p-2 font-mono text-sm">
-                  {Object.entries(input).map(([key, value]) => (
-                    <div key={key} className="mb-1 last:mb-0">
-                      <span className="text-base-content/60">{key}:</span>{' '}
-                      <span>{formatValue(value)}</span>
-                    </div>
-                  ))}
+      <div
+        className="grid transition-[grid-template-rows] duration-300 ease-in-out"
+        style={{ gridTemplateRows: isOpen ? '1fr' : '0fr' }}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="border-t border-base-300 bg-base-100 p-3">
+            <div className="space-y-3">
+              {input && Object.keys(input).length > 0 ? (
+                <div>
+                  <h4 className="mb-2 text-sm font-medium text-base-content/70">Input</h4>
+                  <div className="rounded border border-base-300 bg-base-100 p-2 font-mono text-sm">
+                    {Object.entries(input).map(([key, value]) => (
+                      <div key={key} className="mb-1 last:mb-0">
+                        <span className="text-base-content/60">{key}:</span>{' '}
+                        <span>{formatValue(value)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ) : null}
+              ) : null}
 
-            {output ? (
-              <div>
-                <h4 className="mb-2 text-sm font-medium text-base-content/70">Output</h4>
-                <div className="max-h-60 overflow-auto rounded border border-base-300 bg-base-100 p-2 font-mono text-sm">
-                  <pre className="whitespace-pre-wrap">{formatValue(output)}</pre>
+              {output ? (
+                <div>
+                  <h4 className="mb-2 text-sm font-medium text-base-content/70">Output</h4>
+                  <div className="max-h-60 overflow-auto rounded border border-base-300 bg-base-100 p-2 font-mono text-sm">
+                    <pre className="whitespace-pre-wrap">{formatValue(output)}</pre>
+                  </div>
                 </div>
-              </div>
-            ) : null}
+              ) : null}
 
-            {state === 'output-error' && toolPart.errorText ? (
-              <div>
-                <h4 className="mb-2 text-sm font-medium text-error">Error</h4>
-                <div className="rounded border border-error/30 bg-error/10 p-2 text-sm text-error">
-                  {toolPart.errorText}
+              {state === 'output-error' && toolPart.errorText ? (
+                <div>
+                  <h4 className="mb-2 text-sm font-medium text-error">Error</h4>
+                  <div className="rounded border border-error/30 bg-error/10 p-2 text-sm text-error">
+                    {toolPart.errorText}
+                  </div>
                 </div>
-              </div>
-            ) : null}
+              ) : null}
 
-            {state === 'input-streaming' ? (
-              <div className="text-sm text-base-content/60">Processing tool call...</div>
-            ) : null}
+              {state === 'input-streaming' ? (
+                <div className="text-sm text-base-content/60">Processing tool call...</div>
+              ) : null}
 
-            {toolCallId ? (
-              <div className="border-t border-base-300 pt-2 text-xs text-base-content/60">
-                <span className="font-mono">Call ID: {toolCallId}</span>
-              </div>
-            ) : null}
+              {toolCallId ? (
+                <div className="border-t border-base-300 pt-2 text-xs text-base-content/60">
+                  <span className="font-mono">Call ID: {toolCallId}</span>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
-      ) : null}
+      </div>
     </div>
   )
 }

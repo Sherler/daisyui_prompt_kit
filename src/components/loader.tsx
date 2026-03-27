@@ -2,6 +2,25 @@
 
 import { cn } from '@/utils/cn'
 
+const LOADER_KEYFRAMES = `
+@keyframes dpk-spin{to{transform:rotate(360deg)}}
+@keyframes dpk-spinner-fade{0%{opacity:0}100%{opacity:1}}
+@keyframes dpk-thin-pulse{0%,100%{transform:scale(.95);opacity:.8}50%{transform:scale(1.05);opacity:.4}}
+@keyframes dpk-pulse-dot{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.5);opacity:1}}
+@keyframes dpk-bounce-dots{0%,100%{transform:scale(.8);opacity:.5}50%{transform:scale(1.2);opacity:1}}
+@keyframes dpk-typing{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(-2px);opacity:1}}
+@keyframes dpk-wave{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.6)}}
+@keyframes dpk-wave-bars{0%,100%{transform:scaleY(1);opacity:.5}50%{transform:scaleY(.6);opacity:1}}
+@keyframes dpk-blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes dpk-text-blink{0%,100%{opacity:.45}50%{opacity:1}}
+@keyframes dpk-shimmer{0%{background-position:200% 50%}100%{background-position:-200% 50%}}
+@keyframes dpk-loading-dots{0%,20%{opacity:.2}50%{opacity:1}100%{opacity:.2}}
+`
+
+function LoaderKeyframes() {
+  return <style href="dpk-loader-keyframes" precedence="default">{LOADER_KEYFRAMES}</style>
+}
+
 export interface LoaderProps {
   variant?:
     | 'circular'
@@ -35,15 +54,19 @@ export function CircularLoader({
   }
 
   return (
-    <div
-      className={cn(
-        'animate-spin rounded-full border-2 border-primary border-t-transparent',
-        sizeClasses[size],
-        className,
-      )}
-    >
-      <span className="sr-only">Loading</span>
-    </div>
+    <>
+      <LoaderKeyframes />
+      <div
+        className={cn(
+          'rounded-full border-2 border-primary border-t-transparent',
+          sizeClasses[size],
+          className,
+        )}
+        style={{ animation: 'dpk-spin 1s linear infinite' }}
+      >
+        <span className="sr-only">Loading</span>
+      </div>
+    </>
   )
 }
 
@@ -67,28 +90,32 @@ export function ClassicLoader({
   }
 
   return (
-    <div className={cn('relative', sizeClasses[size], className)}>
-      <div className="absolute h-full w-full">
-        {[...Array(12)].map((_, index) => (
-          <div
-            key={index}
-            className="absolute rounded-full bg-primary animate-spinner-fade"
-            style={{
-              top: '0',
-              left: '50%',
-              marginLeft: size === 'sm' ? '-0.75px' : size === 'lg' ? '-1.25px' : '-1px',
-              transformOrigin: `${size === 'sm' ? '0.75px' : size === 'lg' ? '1.25px' : '1px'} ${size === 'sm' ? '10px' : size === 'lg' ? '14px' : '12px'}`,
-              transform: `rotate(${index * 30}deg)`,
-              opacity: 0,
-              animationDelay: `${index * 0.1}s`,
-              height: barSizes[size].height,
-              width: barSizes[size].width,
-            }}
-          />
-        ))}
+    <>
+      <LoaderKeyframes />
+      <div className={cn('relative', sizeClasses[size], className)}>
+        <div className="absolute h-full w-full">
+          {[...Array(12)].map((_, index) => (
+            <div
+              key={index}
+              className="absolute rounded-full bg-primary"
+              style={{
+                animation: 'dpk-spinner-fade 1.2s linear infinite',
+                top: '0',
+                left: '50%',
+                marginLeft: size === 'sm' ? '-0.75px' : size === 'lg' ? '-1.25px' : '-1px',
+                transformOrigin: `${size === 'sm' ? '0.75px' : size === 'lg' ? '1.25px' : '1px'} ${size === 'sm' ? '10px' : size === 'lg' ? '14px' : '12px'}`,
+                transform: `rotate(${index * 30}deg)`,
+                opacity: 0,
+                animationDelay: `${index * 0.1}s`,
+                height: barSizes[size].height,
+                width: barSizes[size].width,
+              }}
+            />
+          ))}
+        </div>
+        <span className="sr-only">Loading</span>
       </div>
-      <span className="sr-only">Loading</span>
-    </div>
+    </>
   )
 }
 
@@ -106,10 +133,16 @@ export function PulseLoader({
   }
 
   return (
-    <div className={cn('relative', sizeClasses[size], className)}>
-      <div className="absolute inset-0 rounded-full border-2 border-primary animate-thin-pulse" />
-      <span className="sr-only">Loading</span>
-    </div>
+    <>
+      <LoaderKeyframes />
+      <div className={cn('relative', sizeClasses[size], className)}>
+        <div
+          className="absolute inset-0 rounded-full border-2 border-primary"
+          style={{ animation: 'dpk-thin-pulse 1.5s ease-in-out infinite' }}
+        />
+        <span className="sr-only">Loading</span>
+      </div>
+    </>
   )
 }
 
@@ -127,9 +160,15 @@ export function PulseDotLoader({
   }
 
   return (
-    <div className={cn('rounded-full bg-primary animate-pulse-dot', sizeClasses[size], className)}>
-      <span className="sr-only">Loading</span>
-    </div>
+    <>
+      <LoaderKeyframes />
+      <div
+        className={cn('rounded-full bg-primary', sizeClasses[size], className)}
+        style={{ animation: 'dpk-pulse-dot 1.2s ease-in-out infinite' }}
+      >
+        <span className="sr-only">Loading</span>
+      </div>
+    </>
   )
 }
 
@@ -153,16 +192,19 @@ export function DotsLoader({
   }
 
   return (
-    <div className={cn('flex items-center space-x-1', containerSizes[size], className)}>
-      {[...Array(3)].map((_, index) => (
-        <div
-          key={index}
-          className={cn('rounded-full bg-primary animate-bounce-dots', dotSizes[size])}
-          style={{ animationDelay: `${index * 160}ms` }}
-        />
-      ))}
-      <span className="sr-only">Loading</span>
-    </div>
+    <>
+      <LoaderKeyframes />
+      <div className={cn('flex items-center space-x-1', containerSizes[size], className)}>
+        {[...Array(3)].map((_, index) => (
+          <div
+            key={index}
+            className={cn('rounded-full bg-primary', dotSizes[size])}
+            style={{ animation: 'dpk-bounce-dots 1.4s ease-in-out infinite', animationDelay: `${index * 160}ms` }}
+          />
+        ))}
+        <span className="sr-only">Loading</span>
+      </div>
+    </>
   )
 }
 
@@ -186,16 +228,19 @@ export function TypingLoader({
   }
 
   return (
-    <div className={cn('flex items-center space-x-1', containerSizes[size], className)}>
-      {[...Array(3)].map((_, index) => (
-        <div
-          key={index}
-          className={cn('rounded-full bg-primary animate-typing', dotSizes[size])}
-          style={{ animationDelay: `${index * 250}ms` }}
-        />
-      ))}
-      <span className="sr-only">Loading</span>
-    </div>
+    <>
+      <LoaderKeyframes />
+      <div className={cn('flex items-center space-x-1', containerSizes[size], className)}>
+        {[...Array(3)].map((_, index) => (
+          <div
+            key={index}
+            className={cn('rounded-full bg-primary', dotSizes[size])}
+            style={{ animation: 'dpk-typing 1s infinite', animationDelay: `${index * 250}ms` }}
+          />
+        ))}
+        <span className="sr-only">Loading</span>
+      </div>
+    </>
   )
 }
 
@@ -225,19 +270,23 @@ export function WaveLoader({
   }
 
   return (
-    <div className={cn('flex items-center gap-0.5', containerSizes[size], className)}>
-      {[...Array(5)].map((_, index) => (
-        <div
-          key={index}
-          className={cn('rounded-full bg-primary animate-wave', barWidths[size])}
-          style={{
-            animationDelay: `${index * 100}ms`,
-            height: heights[size][index],
-          }}
-        />
-      ))}
-      <span className="sr-only">Loading</span>
-    </div>
+    <>
+      <LoaderKeyframes />
+      <div className={cn('flex items-center gap-0.5', containerSizes[size], className)}>
+        {[...Array(5)].map((_, index) => (
+          <div
+            key={index}
+            className={cn('rounded-full bg-primary', barWidths[size])}
+            style={{
+              animation: 'dpk-wave 1s ease-in-out infinite',
+              animationDelay: `${index * 100}ms`,
+              height: heights[size][index],
+            }}
+          />
+        ))}
+        <span className="sr-only">Loading</span>
+      </div>
+    </>
   )
 }
 
@@ -261,16 +310,19 @@ export function BarsLoader({
   }
 
   return (
-    <div className={cn('flex', containerSizes[size], className)}>
-      {[...Array(3)].map((_, index) => (
-        <div
-          key={index}
-          className={cn('h-full bg-primary animate-wave-bars', barWidths[size])}
-          style={{ animationDelay: `${index * 0.2}s` }}
-        />
-      ))}
-      <span className="sr-only">Loading</span>
-    </div>
+    <>
+      <LoaderKeyframes />
+      <div className={cn('flex', containerSizes[size], className)}>
+        {[...Array(3)].map((_, index) => (
+          <div
+            key={index}
+            className={cn('h-full bg-primary', barWidths[size])}
+            style={{ animation: 'dpk-wave-bars 1.2s ease-in-out infinite', animationDelay: `${index * 0.2}s` }}
+          />
+        ))}
+        <span className="sr-only">Loading</span>
+      </div>
+    </>
   )
 }
 
@@ -300,11 +352,14 @@ export function TerminalLoader({
   }
 
   return (
-    <div className={cn('flex items-center space-x-1', containerSizes[size], className)}>
-      <span className={cn('font-mono text-primary', textSizes[size])}>&gt;</span>
-      <div className={cn('bg-primary animate-blink', cursorSizes[size])} />
-      <span className="sr-only">Loading</span>
-    </div>
+    <>
+      <LoaderKeyframes />
+      <div className={cn('flex items-center space-x-1', containerSizes[size], className)}>
+        <span className={cn('font-mono text-primary', textSizes[size])}>&gt;</span>
+        <div className={cn('bg-primary', cursorSizes[size])} style={{ animation: 'dpk-blink 1s step-end infinite' }} />
+        <span className="sr-only">Loading</span>
+      </div>
+    </>
   )
 }
 
@@ -324,9 +379,15 @@ export function TextBlinkLoader({
   }
 
   return (
-    <div className={cn('animate-text-blink font-medium', textSizes[size], className)}>
-      {text}
-    </div>
+    <>
+      <LoaderKeyframes />
+      <div
+        className={cn('font-medium', textSizes[size], className)}
+        style={{ animation: 'dpk-text-blink 2s ease-in-out infinite' }}
+      >
+        {text}
+      </div>
+    </>
   )
 }
 
@@ -346,19 +407,23 @@ export function TextShimmerLoader({
   }
 
   return (
-    <div
-      className={cn(
-        'bg-[length:200%_auto] bg-clip-text font-medium text-transparent animate-shimmer',
-        textSizes[size],
-        className,
-      )}
-      style={{
-        backgroundImage:
-          'linear-gradient(to right, rgb(from var(--color-base-content) r g b / 0.45) 40%, var(--color-primary) 60%, rgb(from var(--color-base-content) r g b / 0.45) 80%)',
-      }}
-    >
-      {text}
-    </div>
+    <>
+      <LoaderKeyframes />
+      <div
+        className={cn(
+          'bg-[length:200%_auto] bg-clip-text font-medium text-transparent',
+          textSizes[size],
+          className,
+        )}
+        style={{
+          animation: 'dpk-shimmer 4s infinite linear',
+          backgroundImage:
+            'linear-gradient(to right, rgb(from var(--color-base-content) r g b / 0.45) 40%, var(--color-primary) 60%, rgb(from var(--color-base-content) r g b / 0.45) 80%)',
+        }}
+      >
+        {text}
+      </div>
+    </>
   )
 }
 
@@ -378,14 +443,17 @@ export function TextDotsLoader({
   }
 
   return (
-    <div className={cn('inline-flex items-center', className)}>
-      <span className={cn('font-medium text-primary', textSizes[size])}>{text}</span>
-      <span className="inline-flex">
-        <span className="text-primary animate-loading-dots" style={{ animationDelay: '0.2s' }}>.</span>
-        <span className="text-primary animate-loading-dots" style={{ animationDelay: '0.4s' }}>.</span>
-        <span className="text-primary animate-loading-dots" style={{ animationDelay: '0.6s' }}>.</span>
-      </span>
-    </div>
+    <>
+      <LoaderKeyframes />
+      <div className={cn('inline-flex items-center', className)}>
+        <span className={cn('font-medium text-primary', textSizes[size])}>{text}</span>
+        <span className="inline-flex">
+          <span className="text-primary" style={{ animation: 'dpk-loading-dots 1.4s infinite 0.2s' }}>.</span>
+          <span className="text-primary" style={{ animation: 'dpk-loading-dots 1.4s infinite 0.4s' }}>.</span>
+          <span className="text-primary" style={{ animation: 'dpk-loading-dots 1.4s infinite 0.6s' }}>.</span>
+        </span>
+      </div>
+    </>
   )
 }
 

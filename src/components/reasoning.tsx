@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/utils/cn'
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
 import { Markdown } from './markdown'
 
 type ReasoningContextType = {
@@ -97,39 +97,20 @@ function ReasoningContent({
   markdown = false,
   ...props
 }: ReasoningContentProps) {
-  const contentRef = useRef<HTMLDivElement>(null)
-  const innerRef = useRef<HTMLDivElement>(null)
   const { isOpen } = useReasoningContext()
-
-  useEffect(() => {
-    if (!contentRef.current || !innerRef.current) return
-
-    const observer = new ResizeObserver(() => {
-      if (contentRef.current && innerRef.current && isOpen) {
-        contentRef.current.style.maxHeight = `${innerRef.current.scrollHeight}px`
-      }
-    })
-
-    observer.observe(innerRef.current)
-
-    if (isOpen) {
-      contentRef.current.style.maxHeight = `${innerRef.current.scrollHeight}px`
-    }
-
-    return () => observer.disconnect()
-  }, [isOpen])
 
   const content = markdown ? <Markdown>{children as string}</Markdown> : children
 
   return (
     <div
-      ref={contentRef}
-      className={cn('overflow-hidden transition-[max-height] duration-150 ease-out', className)}
-      style={{ maxHeight: isOpen ? contentRef.current?.scrollHeight : '0px' }}
+      className={cn('grid transition-[grid-template-rows] duration-300 ease-in-out', className)}
+      style={{ gridTemplateRows: isOpen ? '1fr' : '0fr' }}
       {...props}
     >
-      <div ref={innerRef} className={cn('text-base-content/70 prose prose-sm max-w-none', contentClassName)}>
-        {content}
+      <div className="min-h-0 overflow-hidden">
+        <div className={cn('text-base-content/70 prose prose-sm max-w-none', contentClassName)}>
+          {content}
+        </div>
       </div>
     </div>
   )

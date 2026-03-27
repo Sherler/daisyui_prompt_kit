@@ -182,13 +182,17 @@ function FileUploadContent({ className, ...props }: FileUploadContentProps) {
   }
 
   return createPortal(
-    <div
-      className={cn(
-        'fixed inset-0 z-50 flex items-center justify-center bg-base-100/80 backdrop-blur-sm animate-fade-in',
-        className,
-      )}
-      {...props}
-    />,
+    <>
+      <style href="dpk-fade-in-keyframes" precedence="default">{`@keyframes dpk-fade-in{from{opacity:0;transform:translateY(0.125rem)}to{opacity:1;transform:translateY(0)}}`}</style>
+      <div
+        className={cn(
+          'fixed inset-0 z-50 flex items-center justify-center bg-base-100/80 backdrop-blur-sm',
+          className,
+        )}
+        style={{ animation: 'dpk-fade-in 180ms ease-out' }}
+        {...props}
+      />
+    </>,
     document.body,
   )
 }
