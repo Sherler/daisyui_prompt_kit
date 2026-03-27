@@ -56,6 +56,12 @@ export const MENU: MenuGroup[] = [
       { id: 'thinking-bar', label: 'Thinking Bar', href: '/thinking-bar' },
     ],
   },
+  {
+    group: 'Docs',
+    items: [
+      { id: 'llms', label: 'LLM Documentation', href: '/llms' },
+    ],
+  },
 ]
 
 export function findMenuItem(pathname: string) {

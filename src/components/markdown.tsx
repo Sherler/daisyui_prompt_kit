@@ -54,13 +54,16 @@ const INITIAL_COMPONENTS: Partial<Components> = {
   },
 }
 
+const DEFAULT_PROSE_CLASSES =
+  'prose prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-h4:text-base prose-h5:text-sm prose-h6:text-xs max-w-none'
+
 const MarkdownComponent = ({
   children,
   className,
   components = INITIAL_COMPONENTS,
 }: MarkdownProps) => {
   return (
-    <div className={className}>
+    <div className={cn(DEFAULT_PROSE_CLASSES, className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex]}

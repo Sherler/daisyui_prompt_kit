@@ -73,7 +73,7 @@ I need to find a number that, when **multiplied by itself**, equals 144.
 
         <Reasoning isStreaming={isStreaming}>
           <ReasoningTrigger>Show reasoning</ReasoningTrigger>
-          <ReasoningContent className="ml-2 border-l-2 border-base-300 px-2 pb-1">
+          <ReasoningContent>
             {text}
           </ReasoningContent>
         </Reasoning>
@@ -91,7 +91,7 @@ I need to find a number that, when **multiplied by itself**, equals 144.
 
         <Reasoning isStreaming={isMarkdownStreaming}>
           <ReasoningTrigger>Show AI reasoning</ReasoningTrigger>
-          <ReasoningContent markdown className="ml-2 border-l-2 border-base-300 px-2 pb-1">
+          <ReasoningContent markdown>
             {markdownText}
           </ReasoningContent>
         </Reasoning>

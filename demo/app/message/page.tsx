@@ -31,13 +31,13 @@ export default function MessagePage() {
         <div className="space-y-3">
           <p className="text-sm font-medium text-base-content/70">Message basic</p>
           <div className="flex flex-col gap-8">
-            <Message className="justify-end">
-              <MessageContent>Hello! How can I help you today?</MessageContent>
+            <Message variant="user">
+              <MessageContent variant="user">Hello! How can I help you today?</MessageContent>
             </Message>
 
-            <Message className="justify-start">
+            <Message variant="assistant">
               <MessageAvatar src="/avatars/ai.png" alt="AI" fallback="AI" />
-              <MessageContent markdown className="bg-transparent p-0">
+              <MessageContent variant="assistant" markdown>
                 I can help with a variety of tasks: answering questions, providing information,
                 assisting with coding, generating creative content. What would you like help
                 with today?
@@ -49,14 +49,14 @@ export default function MessagePage() {
         <div className="space-y-3">
           <p className="text-sm font-medium text-base-content/70">Message with actions</p>
           <div className="flex flex-col gap-8">
-            <Message className="justify-end">
-              <MessageContent>Hello! How can I help you today?</MessageContent>
+            <Message variant="user">
+              <MessageContent variant="user">Hello! How can I help you today?</MessageContent>
             </Message>
 
-            <Message className="justify-start">
+            <Message variant="assistant">
               <MessageAvatar src="/avatars/ai.png" alt="AI" fallback="AI" />
               <div className="flex w-full flex-col gap-2">
-                <MessageContent markdown className="bg-transparent p-0">
+                <MessageContent variant="assistant" markdown>
                   I can help with a variety of tasks: - Answering questions - Providing
                   information - Assisting with coding - Generating creative content What would
                   you like help with today?

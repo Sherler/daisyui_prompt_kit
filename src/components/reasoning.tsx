@@ -108,7 +108,7 @@ function ReasoningContent({
       {...props}
     >
       <div className="min-h-0 overflow-hidden">
-        <div className={cn('text-base-content/70 prose prose-sm max-w-none', contentClassName)}>
+        <div className={cn('ml-2 border-l-2 border-base-300 px-2 pb-1 text-base-content/70 prose prose-sm max-w-none', contentClassName)}>
           {content}
         </div>
       </div>

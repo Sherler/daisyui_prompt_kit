@@ -131,4 +131,41 @@ function CodeBlockGroup({ children, className, ...props }: CodeBlockGroupProps) 
   )
 }
 
-export { CodeBlockGroup, CodeBlockCode, CodeBlock }
+export type CodeBlockCopyButtonProps = {
+  code: string
+  copiedTimeout?: number
+  className?: string
+} & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onClick'>
+
+function CodeBlockCopyButton({
+  code,
+  copiedTimeout = 2000,
+  className,
+  ...props
+}: CodeBlockCopyButtonProps) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code)
+    setCopied(true)
+    setTimeout(() => setCopied(false), copiedTimeout)
+  }
+
+  return (
+    <button
+      type="button"
+      className={cn('btn btn-ghost btn-xs', className)}
+      onClick={handleCopy}
+      aria-label={copied ? 'Copied' : 'Copy code'}
+      {...props}
+    >
+      {copied ? (
+        <span className="icon-[lucide--check] size-3.5 text-success" aria-hidden="true" />
+      ) : (
+        <span className="icon-[lucide--copy] size-3.5" aria-hidden="true" />
+      )}
+    </button>
+  )
+}
+
+export { CodeBlockGroup, CodeBlockCode, CodeBlock, CodeBlockCopyButton }

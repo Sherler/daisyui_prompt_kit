@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
 import {
   CodeBlock,
   CodeBlockCode,
+  CodeBlockCopyButton,
   CodeBlockGroup,
 } from '@daisyui/prompt-kit'
 import { PageShell } from '@/app/components/page-shell'
@@ -31,14 +31,6 @@ function Counter() {
 }`
 
 export default function CodeBlockPage() {
-  const [copied, setCopied] = useState(false)
-
-  const handleCopy = (code: string) => {
-    navigator.clipboard.writeText(code)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
   return (
     <PageShell
       title="Code Block"
@@ -51,20 +43,14 @@ export default function CodeBlockPage() {
 
       <p className="text-base-content/50 text-xs font-medium">With Header</p>
       <CodeBlock>
-        <CodeBlockGroup className="border-base-300 flex items-center justify-between border-b px-4 py-2">
+        <CodeBlockGroup>
           <div className="flex items-center gap-2">
             <span className="bg-primary/10 text-primary rounded-box px-2 py-0.5 text-xs font-medium">
               React
             </span>
             <span className="text-base-content/50 text-sm">counter.tsx</span>
           </div>
-          <button className="btn btn-ghost btn-xs" onClick={() => handleCopy(reactCode)}>
-            {copied ? (
-              <span className="icon-[lucide--check] size-3.5 text-success" />
-            ) : (
-              <span className="icon-[lucide--copy] size-3.5" />
-            )}
-          </button>
+          <CodeBlockCopyButton code={reactCode} />
         </CodeBlockGroup>
         <CodeBlockCode code={reactCode} language="tsx" />
       </CodeBlock>

@@ -14,10 +14,19 @@ const TOOLTIP_SIDE_CLASSES = {
 export type MessageProps = {
   children: React.ReactNode
   className?: string
+  variant?: 'user' | 'assistant'
 } & React.HTMLProps<HTMLDivElement>
 
-const Message = ({ children, className, ...props }: MessageProps) => (
-  <div className={cn('flex gap-3', className)} {...props}>
+const Message = ({ children, className, variant, ...props }: MessageProps) => (
+  <div
+    className={cn(
+      'flex gap-3',
+      variant === 'user' && 'justify-end',
+      variant === 'assistant' && 'justify-start',
+      className
+    )}
+    {...props}
+  >
     {children}
   </div>
 )
@@ -55,6 +64,7 @@ export type MessageContentProps = {
   children: React.ReactNode
   markdown?: boolean
   className?: string
+  variant?: 'user' | 'assistant'
 } & React.ComponentProps<typeof Markdown> &
   React.HTMLProps<HTMLDivElement>
 
@@ -62,10 +72,12 @@ const MessageContent = ({
   children,
   markdown = false,
   className,
+  variant,
   ...props
 }: MessageContentProps) => {
   const classNames = cn(
-    'prose prose-sm max-w-none rounded-lg bg-secondary p-2 text-base-content break-words whitespace-normal',
+    'prose prose-sm max-w-none rounded-lg text-base-content break-words whitespace-normal',
+    variant === 'user' ? 'bg-secondary p-2' : variant === 'assistant' ? 'bg-transparent p-0' : 'bg-secondary p-2',
     className
   )
 

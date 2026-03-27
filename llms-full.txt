@@ -1,47 +1,82 @@
 # DaisyUI Prompt Kit
 
-`@daisyui/prompt-kit` is a React component library for AI chat interfaces.
+`@daisyui/prompt-kit` is a React component library for building AI chat interfaces on top of DaisyUI.
 
-It is designed for DaisyUI 5.5.14, React 19.2.4, and Tailwind CSS 4.1.18.
+It is designed for DaisyUI >= 5.0, React >= 19.0, and Tailwind CSS >= 4.0.
 
-This package is a DaisyUI-native alternative to the original shadcn-based prompt-kit. Do not introduce shadcn components when using this library.
+This package is a DaisyUI-native alternative to the original shadcn-based prompt-kit. Do not introduce shadcn components or Radix primitives when using this library.
 
-## Core Rules
+---
 
-1. Use DaisyUI component classes and Tailwind utility classes only.
-2. Do not add shadcn primitives or Radix wrappers around these components unless you are intentionally extending the API.
-3. Prefer composing the exported primitives instead of rewriting the same UI from scratch.
-4. For chat layouts, use `ChatContainerRoot` and `ChatContainerContent` together.
-5. For input areas, use `PromptInput` with `PromptInputTextarea` and optional action buttons.
-6. For AI output, prefer `Message`, `Markdown`, `CodeBlock`, `ResponseStream`, `Tool`, `Reasoning`, and `Source` in combination.
-7. For theme consistency, use DaisyUI semantic colors like `primary`, `secondary`, `base-100`, and `base-content`.
+## Quick Start
 
-## Installation
-
-### Package
+### 1. Install the package
 
 ```bash
 npm install @daisyui/prompt-kit
+# or
+pnpm add @daisyui/prompt-kit
 ```
 
-### Requirements
+### 2. Set up peer dependencies
 
-- React 19.2.4
-- React DOM 19.2.4
-- DaisyUI 5.5.14
-- Tailwind CSS 4.1.18
+#### Required
 
-### Styles
+Your project must already have these installed (standard DaisyUI setup):
 
-The package entry imports its own styles.
-
-If your bundler removes CSS side effects, also import:
-
-```tsx
-import '@daisyui/prompt-kit/styles'
+```bash
+npm install react react-dom tailwindcss daisyui
 ```
 
-## Recommended Usage Pattern
+#### Recommended (for full functionality)
+
+These are optional peer dependencies. Most components with built-in icons require Iconify, and markdown-based components require the typography plugin.
+
+```bash
+npm install -D @tailwindcss/typography @iconify/tailwind4 @iconify-json/lucide
+```
+
+| Package | Purpose | Used by |
+|---|---|---|
+| `@tailwindcss/typography` | `prose` classes for rendering styled HTML from markdown | `Markdown`, `MessageContent`, `ReasoningContent` |
+| `@iconify/tailwind4` | Renders Lucide icons via Tailwind CSS classes (`icon-[lucide--*]`) | `CodeBlockCopyButton`, `ScrollButton`, `Tool`, `SystemMessage`, `FeedbackBar`, `ThinkingBar`, `Reasoning`, `ChainOfThought`, `Steps` |
+| `@iconify-json/lucide` | Lucide icon data for `@iconify/tailwind4` | Same as above |
+
+> **Without `@tailwindcss/typography`:** `Markdown`, `MessageContent`, and `ReasoningContent` will render unstyled HTML (no heading sizes, no list bullets, no link colors).
+>
+> **Without `@iconify/tailwind4` + `@iconify-json/lucide`:** Components with built-in icons (copy button, scroll chevron, feedback thumbs, system message status icons, etc.) will show empty placeholders instead of icons.
+
+### 3. Configure your CSS
+
+In your global CSS entry file (e.g., `globals.css` or `app.css`), add the necessary plugins:
+
+```css
+@import "tailwindcss";
+
+/* Enable icons from the library's built-in icon classes */
+@plugin "@iconify/tailwind4";
+
+/* Enable prose styling for markdown rendering */
+@plugin "@tailwindcss/typography";
+
+/* DaisyUI with your preferred themes */
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark;
+}
+```
+
+#### Important: Tailwind CSS 4 source scanning
+
+Tailwind CSS 4 auto-detects source files in your project, but it does **not** scan files inside `node_modules` or linked packages. If you use Tailwind utility classes that only appear inside `@daisyui/prompt-kit` source (e.g., `hidden`, `sr-only`, `animate-*`), you must add a `@source` directive so Tailwind generates those classes:
+
+```css
+@import "tailwindcss";
+@source "../node_modules/@daisyui/prompt-kit/dist/**/*.js";
+```
+
+> This is only needed if some library classes appear missing in your build output. Most common Tailwind classes are already generated from your own project source files.
+
+### 4. Import and use
 
 ```tsx
 import {
@@ -56,65 +91,50 @@ import {
   PromptInputAction,
   ScrollButton,
 } from '@daisyui/prompt-kit'
-
-export function ChatScreen() {
-  return (
-    <div className="flex h-[720px] flex-col gap-4">
-      <ChatContainerRoot className="min-h-0 flex-1 rounded-box border border-base-300 bg-base-100">
-        <ChatContainerContent className="gap-4 p-4">
-          <Message>
-            <MessageAvatar fallback="AI" />
-            <MessageContent markdown>
-              {'Hello. I can help you build an agent workflow.'}
-            </MessageContent>
-          </Message>
-        </ChatContainerContent>
-      </ChatContainerRoot>
-
-      <div className="flex justify-center">
-        <ScrollButton variant="primary" />
-      </div>
-
-      <PromptInput onSubmit={() => {}}>
-        <PromptInputTextarea placeholder="Ask the agent to do something" />
-        <PromptInputActions>
-          <PromptInputAction tooltip="Attach file">+</PromptInputAction>
-        </PromptInputActions>
-      </PromptInput>
-    </div>
-  )
-}
 ```
+
+#### Styles
+
+The package auto-imports its styles (including KaTeX CSS for math rendering) as a side effect of the main entry. If your bundler tree-shakes CSS side effects, explicitly import:
+
+```tsx
+import '@daisyui/prompt-kit/styles'
+```
+
+---
+
+## Core Rules
+
+1. Use DaisyUI component classes and Tailwind utility classes only.
+2. Do not add shadcn primitives or Radix wrappers around these components.
+3. Prefer composing the exported primitives instead of rewriting the same UI from scratch.
+4. For theme consistency, use DaisyUI semantic colors like `primary`, `secondary`, `base-100`, and `base-content`.
+
+---
 
 ## Components
 
 ### PromptInput
 
-Use `PromptInput` for the chat composer shell.
+The chat composer shell. Provides context to child components for auto-resize, submit handling, and loading state.
 
 #### Exports
 
-- `PromptInput`
-- `PromptInputTextarea`
-- `PromptInputActions`
-- `PromptInputAction`
+- `PromptInput` — Outer container with rounded border and shadow
+- `PromptInputTextarea` — Auto-resizing textarea
+- `PromptInputActions` — Action button row
+- `PromptInputAction` — Single action button wrapper with tooltip
 
 #### Example
 
 ```tsx
-<PromptInput
-  value={value}
-  onValueChange={setValue}
-  onSubmit={handleSubmit}
-  isLoading={isSending}
->
+<PromptInput value={value} onValueChange={setValue} onSubmit={handleSubmit} isLoading={isSending}>
   <PromptInputTextarea placeholder="Type your message" />
-  <PromptInputActions>
-    <PromptInputAction tooltip="Upload file">
-      <button type="button" className="btn btn-ghost btn-sm btn-square">+</button>
-    </PromptInputAction>
+  <PromptInputActions className="justify-end">
     <PromptInputAction tooltip="Send">
-      <button type="button" className="btn btn-primary btn-sm btn-circle">Send</button>
+      <button type="button" className="btn btn-primary btn-sm btn-circle">
+        <span className="icon-[lucide--arrow-up] size-4" />
+      </button>
     </PromptInputAction>
   </PromptInputActions>
 </PromptInput>
@@ -122,52 +142,64 @@ Use `PromptInput` for the chat composer shell.
 
 #### Props
 
-- `PromptInput.isLoading?: boolean`
-- `PromptInput.value?: string`
-- `PromptInput.onValueChange?: (value: string) => void`
-- `PromptInput.maxHeight?: number | string`
-- `PromptInput.onSubmit?: () => void`
-- `PromptInput.disabled?: boolean`
-- `PromptInput.children: React.ReactNode`
-- `PromptInputTextarea.disableAutosize?: boolean`
-- `PromptInputAction.tooltip: React.ReactNode`
-- `PromptInputAction.side?: 'top' | 'bottom' | 'left' | 'right'`
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `PromptInput.value` | `string` | `''` | Controlled text value |
+| `PromptInput.onValueChange` | `(value: string) => void` | — | Called when text changes |
+| `PromptInput.onSubmit` | `() => void` | — | Called on Enter key |
+| `PromptInput.isLoading` | `boolean` | `false` | Whether a request is in progress |
+| `PromptInput.maxHeight` | `number \| string` | `240` | Max textarea height before scrolling |
+| `PromptInput.disabled` | `boolean` | `false` | Disables input |
+| `PromptInputTextarea.disableAutosize` | `boolean` | `false` | Turns off auto-resize |
+| `PromptInputAction.tooltip` | `ReactNode` | — | Tooltip content |
+| `PromptInputAction.side` | `'top' \| 'bottom' \| 'left' \| 'right'` | `'top'` | Tooltip position |
 
-#### Behavior Rules
+#### Built-in styling
 
-- Pressing `Enter` submits.
-- Pressing `Shift+Enter` inserts a newline.
-- The textarea auto-resizes unless `disableAutosize` is true.
-- `PromptInputAction` wraps your own interactive child such as a button, label, or icon button.
-- `PromptInputAction` stops event bubbling so child clicks do not refocus the outer shell.
+- Container: `rounded-3xl border border-base-300 bg-base-100 shadow-xs`
+- Textarea: borderless, transparent background, dark-mode compatible placeholder
+- Enter submits, Shift+Enter inserts newline
+- Click on the container focuses the textarea
+
+#### Integration notes
+
+- `PromptInputAction` wraps your own button/label/icon; it does not render a button itself.
+- The consumer provides send/stop/attach icons — the library does not ship these as defaults because they are application-specific.
+
+---
 
 ### Message
 
-Use `Message` to render user or assistant messages.
+Renders user or assistant chat messages with optional markdown, avatar, and action buttons.
 
 #### Exports
 
-- `Message`
-- `MessageAvatar`
-- `MessageContent`
-- `MessageActions`
-- `MessageAction`
+- `Message` — Flex container for a single message
+- `MessageAvatar` — Round avatar with image or fallback initial
+- `MessageContent` — Content bubble with optional markdown rendering
+- `MessageActions` — Action button row
+- `MessageAction` — Single action button with tooltip
 
 #### Example
 
 ```tsx
-<Message className="items-start">
+{/* User message — right-aligned, colored bubble */}
+<Message variant="user">
+  <MessageContent variant="user">Hello, how can you help?</MessageContent>
+</Message>
+
+{/* Assistant message — left-aligned, transparent background */}
+<Message variant="assistant">
   <MessageAvatar fallback="AI" />
-  <div className="space-y-2">
-    <MessageContent markdown>
-      {'Here is a **formatted** answer with `inline code`.'}
+  <div className="flex flex-col gap-2">
+    <MessageContent variant="assistant" markdown>
+      {'I can help with **coding**, research, and more.'}
     </MessageContent>
     <MessageActions>
       <MessageAction tooltip="Copy">
-        <button type="button" className="btn btn-ghost btn-sm btn-circle">Copy</button>
-      </MessageAction>
-      <MessageAction tooltip="Retry">
-        <button type="button" className="btn btn-ghost btn-sm btn-circle">Retry</button>
+        <button className="btn btn-ghost btn-sm btn-circle">
+          <span className="icon-[lucide--copy] size-4" />
+        </button>
       </MessageAction>
     </MessageActions>
   </div>
@@ -176,80 +208,88 @@ Use `Message` to render user or assistant messages.
 
 #### Props
 
-- `Message.children: React.ReactNode`
-- `MessageAvatar.src?: string`
-- `MessageAvatar.alt?: string`
-- `MessageAvatar.fallback?: string`
-- `MessageContent.markdown?: boolean`
-- `MessageAction.tooltip: React.ReactNode`
-- `MessageAction.side?: 'top' | 'bottom' | 'left' | 'right'`
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `Message.variant` | `'user' \| 'assistant'` | — | Sets alignment (`justify-end` for user, `justify-start` for assistant) |
+| `MessageContent.variant` | `'user' \| 'assistant'` | — | Sets style: user = `bg-secondary p-2`, assistant = `bg-transparent p-0` |
+| `MessageContent.markdown` | `boolean` | `false` | When true, renders content through `<Markdown>` |
+| `MessageAvatar.src` | `string` | — | Avatar image URL |
+| `MessageAvatar.fallback` | `string` | — | Fallback initial when no image |
+| `MessageAction.tooltip` | `ReactNode` | — | Tooltip content |
 
-#### Behavior Rules
+#### Built-in styling
 
-- Set `markdown` on `MessageContent` when the message contains formatted model output.
-- `MessageAction` wraps your own interactive child instead of rendering a button for you.
-- Use `MessageActions` for secondary controls such as copy, regenerate, pin, or feedback.
+- `MessageContent` includes `prose prose-sm max-w-none` — no need to add prose classes yourself
+- User variant: `bg-secondary p-2 rounded-lg`
+- Assistant variant: `bg-transparent p-0` — clean text without a bubble
+- Without `variant`, defaults to `bg-secondary p-2` (backward compatible)
 
-### Chat Container
+#### Requires
 
-Use the chat container primitives to create a sticky-bottom transcript.
+- `@tailwindcss/typography` — for `prose` classes used internally
 
-#### Exports
+---
 
-- `ChatContainerRoot`
-- `ChatContainerContent`
-- `ChatContainerScrollAnchor`
+### Markdown
 
-#### Example
-
-```tsx
-<ChatContainerRoot className="h-[560px] rounded-box border border-base-300 bg-base-100">
-  <ChatContainerContent className="gap-4 p-4">
-    {messages.map((message) => (
-      <Message key={message.id}>{message.content}</Message>
-    ))}
-    <ChatContainerScrollAnchor />
-  </ChatContainerContent>
-</ChatContainerRoot>
-```
-
-#### Behavior Rules
-
-- `ChatContainerRoot` owns the scrolling region.
-- `ChatContainerContent` holds the vertical message stack.
-- `ChatContainerScrollAnchor` is useful when you want an explicit target near the bottom.
-
-### ScrollButton
-
-Use `ScrollButton` with `ChatContainerRoot` to jump back to the latest content.
+Renders markdown strings into styled HTML with support for GFM, math (KaTeX), and syntax-highlighted code blocks.
 
 #### Example
 
 ```tsx
-<div className="fixed bottom-6 right-6">
-  <ScrollButton variant="primary" size="md" />
-</div>
+<Markdown>
+  {`# Hello World\n\nThis is **bold** and $E = mc^2$ is math.`}
+</Markdown>
 ```
 
 #### Props
 
-- `variant?: 'default' | 'primary' | 'secondary' | 'ghost'`
-- `size?: 'xs' | 'sm' | 'md'`
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `children` | `string` | — | Markdown content |
+| `className` | `string` | — | Additional classes (merged with defaults) |
+| `components` | `Partial<Components>` | — | Override react-markdown components |
 
-#### Behavior Rules
+#### Built-in styling
 
-- The button hides itself when the transcript is already at the bottom.
-- Your custom `onClick` still runs after the scroll action.
+The component applies these classes by default — you do NOT need to add `prose` manually:
+
+```
+prose prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-h4:text-base prose-h5:text-sm prose-h6:text-xs max-w-none
+```
+
+You can override or extend by passing `className`:
+
+```tsx
+<Markdown className="prose-lg dark:prose-invert">
+  {content}
+</Markdown>
+```
+
+#### Built-in features
+
+- Headings, lists, tables, blockquotes (via `remark-gfm`)
+- Inline and block math equations (via `remark-math` + `rehype-katex`)
+- Fenced code blocks auto-rendered with `CodeBlock` + `CodeBlockCode` (Shiki syntax highlighting)
+- Inline code rendered as pill-style `bg-base-200 rounded-sm px-1 font-mono text-sm`
+- KaTeX CSS is bundled with the library (imported automatically)
+
+#### Requires
+
+- `@tailwindcss/typography` — for `prose` classes
+
+---
 
 ### CodeBlock
 
-Use code blocks for syntax-highlighted model output.
+Displays code with syntax highlighting (Shiki), optional header bar, and built-in copy button.
 
 #### Exports
 
-- `CodeBlock`
-- `CodeBlockCode`
-- `CodeBlockGroup`
+- `CodeBlock` — Container with border and rounded corners
+- `CodeBlockCode` — Syntax-highlighted code content
+- `CodeBlockGroup` — Header bar for title/language/actions
+- `CodeBlockCopyButton` — Built-in copy-to-clipboard button with icon swap
 
 #### Example
 
@@ -257,197 +297,184 @@ Use code blocks for syntax-highlighted model output.
 <CodeBlock>
   <CodeBlockGroup>
     <span className="text-xs text-base-content/60">tsx</span>
-    <button className="btn btn-ghost btn-xs">Copy</button>
+    <CodeBlockCopyButton code={sourceCode} />
   </CodeBlockGroup>
-  <CodeBlockCode code={source} language="tsx" theme="github-light" />
+  <CodeBlockCode code={sourceCode} language="tsx" />
 </CodeBlock>
 ```
 
 #### Props
 
-- `CodeBlockCode.code: string`
-- `CodeBlockCode.language?: string`
-- `CodeBlockCode.theme?: string`
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `CodeBlockCode.code` | `string` | — | Source code to display |
+| `CodeBlockCode.language` | `string` | `'tsx'` | Language for syntax highlighting |
+| `CodeBlockCode.theme` | `string` | auto-detected | Shiki theme (auto-switches light/dark) |
+| `CodeBlockCopyButton.code` | `string` | — | Code to copy to clipboard |
+| `CodeBlockCopyButton.copiedTimeout` | `number` | `2000` | Time (ms) before icon resets |
 
-#### Behavior Rules
+#### Built-in features
 
-- `CodeBlockCode` uses Shiki for syntax highlighting.
-- Wrap metadata or actions inside `CodeBlockGroup`.
+- `CodeBlockCopyButton` handles all clipboard logic, renders `icon-[lucide--copy]` / `icon-[lucide--check]` automatically
+- `CodeBlockCode` auto-detects light/dark theme from `data-theme`, `color-scheme`, or `prefers-color-scheme`
+- `CodeBlockGroup` provides a `border-b border-base-300 px-4 py-2` header row
+- `CodeBlock` has `not-prose` class to prevent prose styling from interfering
 
-### Markdown
+#### Requires
 
-Use `Markdown` to render LLM output containing headings, lists, tables, blockquotes, or fenced code blocks.
+- `@iconify/tailwind4` + `@iconify-json/lucide` — for copy/check icons in `CodeBlockCopyButton`
 
-#### Example
+---
 
-```tsx
-<Markdown>
-  {`# Plan\n\n- Build components\n- Run tests\n- Publish package`}
-</Markdown>
-```
+### ChatContainer
 
-#### Props
-
-- `children: string`
-- `id?: string`
-- `className?: string`
-- `components?: Partial<Components>`
-
-#### Behavior Rules
-
-- Pass actual newline characters in the markdown string. Escaped sequences like `\n` render as plain text.
-- Fenced code blocks are rendered with `CodeBlock` and `CodeBlockCode`.
-- Inline code uses a compact pill-like style.
-- GitHub Flavored Markdown tables are enabled through `remark-gfm`.
-- Large tables should be rendered inside a horizontally scrollable container style such as `markdown-content`.
-- Inline and block math formulas are rendered through `remark-math` and `rehype-katex`.
-- `remark-gfm` and `remark-breaks` are enabled.
-
-### Loader
-
-Use `Loader` for streaming and background task indicators.
-
-#### Example
-
-```tsx
-<Loader variant="typing" size="md" />
-```
-
-#### Props
-
-- `variant?: 'circular' | 'classic' | 'pulse' | 'pulse-dot' | 'dots' | 'typing' | 'wave' | 'bars' | 'terminal' | 'text-blink' | 'text-shimmer' | 'loading-dots'`
-- `size?: 'sm' | 'md' | 'lg'`
-- `text?: string`
-
-#### Behavior Rules
-
-- All official prompt-kit loader variants are supported.
-- `text` is primarily used by `text-blink`, `text-shimmer`, and `loading-dots`.
-- `terminal` intentionally renders a prompt-like cursor instead of a text label.
-
-### TextShimmer
-
-Use `TextShimmer` when you want a lightweight animated emphasis treatment for loading labels or assistant status text.
-
-#### Example
-
-```tsx
-<TextShimmer as="p" duration={4} spread={20}>
-  Loading amazing content...
-</TextShimmer>
-```
-
-#### Props
-
-- `as?: string`
-- `duration?: number`
-- `spread?: number`
-- `children: React.ReactNode`
-
-#### Behavior Rules
-
-- `spread` is clamped to a practical range so the shimmer band stays readable.
-- Use `children` instead of a dedicated `text` prop so inline formatting remains possible.
-
-### Reasoning
-
-Use `Reasoning` for collapsible model reasoning or intermediate notes.
+Provides a scrollable transcript region with auto-scroll-to-bottom behavior.
 
 #### Exports
 
-- `Reasoning`
-- `ReasoningTrigger`
-- `ReasoningContent`
+- `ChatContainerRoot` — Scroll container with `use-stick-to-bottom`
+- `ChatContainerContent` — Vertical message stack
+- `ChatContainerScrollAnchor` — Optional explicit scroll target
 
 #### Example
 
 ```tsx
-<Reasoning isStreaming={isThinking}>
-  <ReasoningTrigger>View reasoning</ReasoningTrigger>
-  <ReasoningContent markdown>
-    {'The model is checking the latest tool outputs before answering.'}
-  </ReasoningContent>
-</Reasoning>
+<ChatContainerRoot className="h-[560px] rounded-box border border-base-300 bg-base-100">
+  <ChatContainerContent className="gap-4 p-4">
+    {messages.map((msg) => (
+      <Message key={msg.id} variant={msg.role}>
+        <MessageContent variant={msg.role} markdown>{msg.content}</MessageContent>
+      </Message>
+    ))}
+  </ChatContainerContent>
+</ChatContainerRoot>
 ```
 
-#### Props
+---
 
-- `Reasoning.open?: boolean`
-- `Reasoning.onOpenChange?: (open: boolean) => void`
-- `Reasoning.isStreaming?: boolean`
-- `ReasoningContent.markdown?: boolean`
-- `ReasoningContent.contentClassName?: string`
+### ScrollButton
 
-#### Behavior Rules
-
-- When `isStreaming` becomes true, the section auto-opens once.
-- When streaming finishes, the auto-opened section closes again unless the consumer controls `open`.
-- `ReasoningContent` animates `max-height` for a compact expand and collapse effect.
-
-### PromptSuggestion
-
-Use `PromptSuggestion` for suggested starter prompts and quick actions.
+A floating button that scrolls the chat to the latest content. Must be used inside `ChatContainerRoot`.
 
 #### Example
 
 ```tsx
-<div className="flex flex-wrap gap-2">
-  <PromptSuggestion>Summarize the repository</PromptSuggestion>
-  <PromptSuggestion highlight="React">
-    Build a React dashboard for agent runs
-  </PromptSuggestion>
+<div className="absolute bottom-4 right-4">
+  <ScrollButton variant="primary" size="md" />
 </div>
 ```
 
 #### Props
 
-- `variant?: 'default' | 'outline' | 'ghost'`
-- `size?: 'sm' | 'md' | 'lg'`
-- `highlight?: string`
+| Prop | Type | Default |
+|---|---|---|
+| `variant` | `'default' \| 'primary' \| 'secondary' \| 'ghost' \| 'outline'` | `'outline'` |
+| `size` | `'xs' \| 'sm' \| 'md'` | `'sm'` |
 
-#### Behavior Rules
+- Auto-hides when already at bottom
+- Built-in `icon-[lucide--chevron-down]`
 
-- Without `highlight`, the component renders as a rounded suggestion chip and defaults to outline styling.
-- With `highlight`, it switches to a full-width list-item style and highlights only the first case-insensitive match.
-- If `children` is not a plain string in highlight mode, the component falls back to rendering the content without text splitting.
+#### Requires
 
-### ResponseStream
+- `@iconify/tailwind4` + `@iconify-json/lucide`
 
-Use `ResponseStream` to progressively reveal text.
+---
+
+### Reasoning
+
+Collapsible model reasoning trace with built-in left border indicator.
+
+#### Exports
+
+- `Reasoning` — Context provider with open/close state
+- `ReasoningTrigger` — Toggle button with chevron
+- `ReasoningContent` — Collapsible content area
 
 #### Example
 
 ```tsx
-<ResponseStream textStream={responseText} mode="typewriter" speed={20} as="div" />
+<Reasoning isStreaming={isThinking}>
+  <ReasoningTrigger>Show reasoning</ReasoningTrigger>
+  <ReasoningContent markdown>{reasoningText}</ReasoningContent>
+</Reasoning>
 ```
 
 #### Props
 
-- `textStream: string | AsyncIterable<string>`
-- `mode?: 'typewriter' | 'fade'`
-- `speed?: number`
-- `onComplete?: () => void`
-- `as?: keyof React.JSX.IntrinsicElements`
-- `fadeDuration?: number`
-- `segmentDelay?: number`
-- `characterChunkSize?: number`
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `Reasoning.isStreaming` | `boolean` | — | Auto-opens when true, auto-closes when false |
+| `Reasoning.open` | `boolean` | — | Controlled open state |
+| `ReasoningContent.markdown` | `boolean` | `false` | Render content as markdown |
+| `ReasoningContent.contentClassName` | `string` | — | Additional classes on inner content |
 
-#### Behavior Rules
+#### Built-in styling
 
-- `typewriter` mode reveals text progressively based on `speed`.
-- `fade` mode reveals segmented text with staggered animation delays.
-- For fully custom streaming logic, use `useTextStream` directly.
-- `useTextStream` auto-starts when `textStream` changes and also exposes `startStreaming()` for manual restarts.
+- Content area: `ml-2 border-l-2 border-base-300 px-2 pb-1` — the left border indicator is built in
+- Text: `prose prose-sm max-w-none text-base-content/70`
+- Trigger: `text-primary` with animated `icon-[lucide--chevron-down]`
+- Smooth grid-based collapse animation
+
+#### Requires
+
+- `@tailwindcss/typography`, `@iconify/tailwind4` + `@iconify-json/lucide`
+
+---
+
+### ResponseStream
+
+Progressively reveals text using typewriter or fade animation.
+
+#### Example
+
+```tsx
+<ResponseStream textStream={responseText} mode="typewriter" speed={20} />
+```
+
+#### Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `textStream` | `string \| AsyncIterable<string>` | — |
+| `mode` | `'typewriter' \| 'fade'` | `'typewriter'` |
+| `speed` | `number` | `20` |
+| `as` | `keyof JSX.IntrinsicElements` | `'div'` |
+| `onComplete` | `() => void` | — |
+
+---
+
+### PromptSuggestion
+
+Suggestion chips for starter prompts and quick actions. Two modes: pill buttons and highlighted list items.
+
+#### Example
+
+```tsx
+<div className="flex flex-wrap gap-2">
+  <PromptSuggestion onClick={() => setValue('Tell me a joke')}>Tell me a joke</PromptSuggestion>
+  <PromptSuggestion highlight="How to">How to create a React component</PromptSuggestion>
+</div>
+```
+
+#### Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `variant` | `'default' \| 'outline' \| 'ghost'` | — |
+| `size` | `'sm' \| 'md' \| 'lg'` | — |
+| `highlight` | `string` | — |
+
+---
 
 ### FileUpload
 
-Use file upload primitives to attach files to prompts.
+File attachment with drag-and-drop overlay. Provides context for trigger and overlay components.
 
 #### Exports
 
-- `FileUpload`
-- `FileUploadTrigger`
-- `FileUploadContent`
+- `FileUpload` — Context provider with file callbacks
+- `FileUploadTrigger` — Button that opens the file picker
+- `FileUploadContent` — Portal overlay shown during drag
 
 #### Example
 
@@ -455,47 +482,16 @@ Use file upload primitives to attach files to prompts.
 <FileUpload onFilesAdded={handleFiles} accept="image/*,.pdf">
   <FileUploadTrigger className="btn btn-outline btn-sm">Attach</FileUploadTrigger>
   <FileUploadContent className="rounded-box p-3">
-    <p className="text-sm text-base-content/70">Drop files here or click Attach</p>
+    <p className="text-sm text-base-content/70">Drop files here</p>
   </FileUploadContent>
 </FileUpload>
 ```
 
-#### Props
-
-- `FileUpload.onFilesAdded: (files: File[]) => void`
-- `FileUpload.multiple?: boolean`
-- `FileUpload.accept?: string`
-- `FileUpload.disabled?: boolean`
-- `FileUploadTrigger.asChild?: boolean`
-
-#### Behavior Rules
-
-- The hidden file input is triggered from `FileUploadTrigger`.
-- Dragging files over the window opens `FileUploadContent` as a global overlay.
-- When `multiple` is false, only the first dropped or selected file is forwarded.
-
-### JSXPreview
-
-Use `JSXPreview` to render JSX strings, including partially streamed JSX.
-
-#### Example
-
-```tsx
-<JSXPreview jsx={'<div className="badge badge-primary">Ready</div>'} />
-```
-
-#### Props
-
-- `jsx: string`
-- `isStreaming?: boolean`
-
-#### Behavior Rules
-
-- When `isStreaming` is true, the component attempts to close incomplete tags before rendering.
+---
 
 ### Tool
 
-Use `Tool` to display tool calls and their status.
+Displays tool calls with status indicators, input/output payloads, and error details. Self-contained — no extra styling needed.
 
 #### Example
 
@@ -511,132 +507,76 @@ Use `Tool` to display tool calls and their status.
 />
 ```
 
-#### Props
+#### Built-in features
 
-- `toolPart.type: string`
-- `toolPart.state: 'input-streaming' | 'input-available' | 'output-available' | 'output-error'`
-- `toolPart.input?: Record<string, unknown>`
-- `toolPart.output?: Record<string, unknown>`
-- `toolPart.errorText?: string`
-- `toolPart.toolCallId?: string`
-- `defaultOpen?: boolean`
+- State icons: spinning loader, gear, check, error X — all built in
+- State badges with semantic colors (info, warning, success, error)
+- Collapsible body showing input, output, and error payloads
+- Formatted JSON display
 
-#### Behavior Rules
+#### Requires
 
-- `input-streaming` shows a processing state before the tool input fully settles.
-- `output-available` and `output-error` expose the result payload or error payload in the expandable body.
-- Input and output values are formatted as readable text while preserving JSON structure.
+- `@iconify/tailwind4` + `@iconify-json/lucide`
+
+---
 
 ### Source
 
-Use `Source` for citations, links, and source previews.
+Citation links with hoverable preview cards. Fetches favicon automatically.
 
 #### Exports
 
-- `Source`
-- `SourceTrigger`
-- `SourceContent`
+- `Source` — Context provider with URL
+- `SourceTrigger` — Clickable citation chip
+- `SourceContent` — Hover card with title and description
 
 #### Example
 
 ```tsx
 <Source href="https://daisyui.com/components/modal/">
   <SourceTrigger showFavicon />
-  <SourceContent
-    title="Modal"
-    description="DaisyUI modal component documentation."
-  />
+  <SourceContent title="Modal" description="DaisyUI modal component docs." />
 </Source>
 ```
 
-#### Props
-
-- `Source.href: string`
-- `SourceTrigger.label?: string | number`
-- `SourceTrigger.showFavicon?: boolean`
-- `SourceContent.title: string`
-- `SourceContent.description?: string`
-
-#### Behavior Rules
-
-- `Source` provides the shared link context for `SourceTrigger` and `SourceContent`.
-- `SourceTrigger` renders the clickable citation chip.
-- `SourceContent` renders the hover card preview and links to the same source.
-- `SourceTrigger` can optionally show a favicon.
+---
 
 ### ChainOfThought
 
-Use `ChainOfThought` for multi-step collapsible reasoning traces.
+Multi-step collapsible reasoning traces with vertical timeline.
 
 #### Example
 
 ```tsx
 <ChainOfThought>
   <ChainOfThoughtStep>
-    <ChainOfThoughtTrigger>Analyzing the request</ChainOfThoughtTrigger>
+    <ChainOfThoughtTrigger leftIcon={<span className="icon-[lucide--search] size-4" />}>
+      Analyzing request
+    </ChainOfThoughtTrigger>
     <ChainOfThoughtContent>
-      <ChainOfThoughtItem>Determine the user intent.</ChainOfThoughtItem>
-      <ChainOfThoughtItem>Identify missing implementation details.</ChainOfThoughtItem>
+      <ChainOfThoughtItem>Identify user intent</ChainOfThoughtItem>
+      <ChainOfThoughtItem>Find implementation details</ChainOfThoughtItem>
     </ChainOfThoughtContent>
   </ChainOfThoughtStep>
 </ChainOfThought>
 ```
 
-#### Props
+#### Built-in features
 
-- `ChainOfThought.children: React.ReactNode`
-- `ChainOfThoughtStep.defaultOpen?: boolean`
-- `ChainOfThoughtStep.open?: boolean`
-- `ChainOfThoughtStep.onOpenChange?: (open: boolean) => void`
-- `ChainOfThoughtTrigger.leftIcon?: React.ReactNode`
-- `ChainOfThoughtTrigger.swapIconOnHover?: boolean`
+- Vertical timeline connector lines (`bg-primary/20`)
+- `swapIconOnHover` — custom left icon swaps to chevron on hover
+- Auto-marks last step for clean timeline ending
+- Built-in `icon-[lucide--chevron-down]`
 
-#### Behavior Rules
+#### Requires
 
-- Compose the component with `ChainOfThoughtStep`, `ChainOfThoughtTrigger`, `ChainOfThoughtContent`, and `ChainOfThoughtItem`.
-- `ChainOfThought` automatically marks the final step so timeline connectors end cleanly.
-- `ChainOfThoughtStep` supports controlled and uncontrolled open state.
+- `@iconify/tailwind4` + `@iconify-json/lucide`
 
-### FeedbackBar
-
-Use `FeedbackBar` for copy, regenerate, thumbs up, and thumbs down actions.
-
-#### Example
-
-```tsx
-<FeedbackBar
-  onCopy={handleCopy}
-  onRegenerate={handleRetry}
-  onThumbsUp={handleUpvote}
-  onThumbsDown={handleDownvote}
-/>
-```
-
-### Image
-
-Use `Image` for generated media, uploaded images, or assistant attachments.
-
-#### Example
-
-```tsx
-<Image
-  src="https://picsum.photos/800/450"
-  alt="Preview"
-  aspectRatio="video"
-  containerClassName="max-w-xl"
-/>
-```
-
-#### Props
-
-- `src: string`
-- `alt?: string`
-- `aspectRatio?: 'auto' | 'square' | 'video' | 'portrait'`
-- `containerClassName?: string`
+---
 
 ### Steps
 
-Use `Steps` to display collapsible multi-step traces in agent workflows.
+Collapsible multi-step agent workflow traces with vertical bar.
 
 #### Example
 
@@ -644,96 +584,180 @@ Use `Steps` to display collapsible multi-step traces in agent workflows.
 <Steps defaultOpen>
   <StepsTrigger>Agent run: Summarize repository</StepsTrigger>
   <StepsContent>
-    <StepsItem>Searching files in repo...</StepsItem>
-    <StepsItem>Parsing markdown and code blocks</StepsItem>
+    <StepsItem>Searching files...</StepsItem>
+    <StepsItem>Parsing markdown</StepsItem>
     <StepsItem className="text-base-content">Summary generated</StepsItem>
   </StepsContent>
 </Steps>
 ```
 
-#### Exports
+#### Built-in features
 
-- `Steps`
-- `StepsTrigger`
-- `StepsContent`
-- `StepsItem`
-- `StepsBar`
+- Vertical bar (`StepsBar`), customizable via `bar` prop
+- Grid-based collapse animation
+- `swapIconOnHover` on `StepsTrigger`
 
-#### Props
+#### Requires
 
-- `Steps.defaultOpen?: boolean`
-- `Steps.open?: boolean`
-- `Steps.onOpenChange?: (open: boolean) => void`
-- `StepsTrigger.leftIcon?: React.ReactNode`
-- `StepsTrigger.swapIconOnHover?: boolean`
-- `StepsContent.bar?: React.ReactNode`
+- `@iconify/tailwind4` + `@iconify-json/lucide`
 
-#### Behavior Rules
+---
 
-- `Steps` supports controlled and uncontrolled open state.
-- `StepsContent` renders a two-column layout with a vertical bar and stacked items.
-- `StepsTrigger` can either show a default chevron or swap a custom leading icon on hover.
+### FeedbackBar
+
+Thumbs up/down and close actions for assistant messages. Self-contained.
+
+#### Example
+
+```tsx
+<FeedbackBar
+  title="Was this helpful?"
+  onHelpful={handleUpvote}
+  onNotHelpful={handleDownvote}
+  onClose={handleDismiss}
+/>
+```
+
+#### Built-in icons
+
+- `icon-[lucide--thumbs-up]`, `icon-[lucide--thumbs-down]`, `icon-[lucide--x]`
+
+#### Requires
+
+- `@iconify/tailwind4` + `@iconify-json/lucide`
+
+---
 
 ### SystemMessage
 
-Use `SystemMessage` for status, warnings, errors, and neutral system feedback.
+Status banners for info, success, warning, and error messages.
 
 #### Example
 
 ```tsx
-<SystemMessage variant="warning">
-  The current model response is still streaming.
+<SystemMessage variant="warning">Model response is still streaming.</SystemMessage>
+<SystemMessage variant="success" fill>Operation completed successfully.</SystemMessage>
+<SystemMessage variant="error" cta={{ label: 'Retry', onClick: handleRetry }}>
+  Failed to generate response.
 </SystemMessage>
 ```
 
-#### Variants
-
-- `info`
-- `success`
-- `warning`
-- `error`
-
-### TextShimmer
-
-Use `TextShimmer` for animated labels or loading headlines.
-
-#### Example
-
-```tsx
-<TextShimmer as="p" duration={3.2} spread={20}>
-  Generating UI
-</TextShimmer>
-```
-
 #### Props
 
-- `as?: string`
-- `duration?: number`
-- `spread?: number`
-- `children: React.ReactNode`
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `variant` | `'info' \| 'success' \| 'warning' \| 'error'` | `'info'` | Message type |
+| `fill` | `boolean` | `false` | Filled background vs outlined border |
+| `icon` | `ReactNode` | — | Override default icon |
+| `isIconHidden` | `boolean` | `false` | Hide icon entirely |
+| `cta` | `{ label: string; onClick?: () => void }` | — | CTA button on the right |
+
+#### Built-in features
+
+- Default icons per variant (info, check, warning, alert)
+- Filled mode: `bg-{variant}/10 border-transparent`
+- Outlined mode: `border-{variant}/40`
+
+#### Requires
+
+- `@iconify/tailwind4` + `@iconify-json/lucide`
+
+---
 
 ### ThinkingBar
 
-Use `ThinkingBar` to show an active model-thinking state.
+Animated label showing the model is thinking, with optional stop button.
 
 #### Example
 
 ```tsx
-<ThinkingBar isThinking text="Analyzing files..." />
+<ThinkingBar isThinking text="Analyzing files..." onStop={handleStop} />
 ```
 
 #### Props
 
-- `isThinking?: boolean`
-- `text?: string`
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `isThinking` | `boolean` | `true` | Show/hide the bar |
+| `text` | `string` | `'Thinking'` | Animated label text |
+| `onStop` | `() => void` | — | Renders a stop button when provided |
+| `stopLabel` | `string` | `'Answer now'` | Stop button text |
+| `onClick` | `() => void` | — | Makes the label clickable |
+
+#### Built-in features
+
+- Uses `TextShimmer` for animated text
+- Returns `null` when `isThinking` is false
+- Built-in `icon-[lucide--chevron-right]`
+
+#### Requires
+
+- `@iconify/tailwind4` + `@iconify-json/lucide`
+
+---
+
+### Loader
+
+Animated loading indicators with 12 built-in variants. Fully self-contained — no external dependencies.
+
+#### Example
+
+```tsx
+<Loader variant="typing" size="md" />
+<Loader variant="text-shimmer" text="Generating..." />
+```
+
+#### Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `variant` | `'circular' \| 'classic' \| 'pulse' \| 'pulse-dot' \| 'dots' \| 'typing' \| 'wave' \| 'bars' \| 'terminal' \| 'text-blink' \| 'text-shimmer' \| 'loading-dots'` | `'circular'` |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` |
+| `text` | `string` | — |
+
+---
+
+### TextShimmer
+
+Lightweight animated text emphasis for loading labels.
+
+#### Example
+
+```tsx
+<TextShimmer as="p" duration={4} spread={20}>Loading amazing content...</TextShimmer>
+```
+
+---
+
+### Image
+
+Image component with loading skeleton, error fallback, and aspect ratio control. Fully self-contained.
+
+#### Example
+
+```tsx
+<Image src="https://picsum.photos/800/450" alt="Preview" aspectRatio="video" />
+```
+
+---
+
+### JSXPreview
+
+Runtime JSX renderer for previewing streamed JSX strings.
+
+#### Example
+
+```tsx
+<JSXPreview jsx={'<div className="badge badge-primary">Ready</div>'} isStreaming />
+```
+
+---
 
 ## Hooks
 
 ### useTextStream
 
-Use the hook when you need lower-level control over progressive text rendering.
-
-#### Example
+Low-level hook for progressive text rendering. Used internally by `ResponseStream`.
 
 ```tsx
 const { displayedText, isComplete, startStreaming, pause, resume } = useTextStream({
@@ -743,75 +767,188 @@ const { displayedText, isComplete, startStreaming, pause, resume } = useTextStre
 })
 ```
 
-#### Return Value
+#### Returns
 
-- `displayedText`
-- `isComplete`
-- `segments`
-- `getFadeDuration()`
-- `getSegmentDelay()`
-- `reset()`
-- `startStreaming()`
-- `pause()`
-- `resume()`
+| Field | Type | Description |
+|---|---|---|
+| `displayedText` | `string` | Currently visible text |
+| `isComplete` | `boolean` | Whether streaming finished |
+| `segments` | `Segment[]` | Parsed segments for fade mode |
+| `startStreaming()` | `() => void` | Manually restart stream |
+| `pause()` | `() => void` | Pause typewriter |
+| `resume()` | `() => void` | Resume typewriter |
+| `reset()` | `() => void` | Reset to empty |
 
-#### Behavior Rules
+---
 
-- The hook starts streaming automatically when `textStream` changes.
-- Call `startStreaming()` when you want to manually restart the same stream.
-- `pause()` and `resume()` are intended for string-based streams.
+## Utility Exports
+
+### cn
+
+Tailwind class merging utility (wraps `clsx` + `tailwind-merge`):
+
+```tsx
+import { cn } from '@daisyui/prompt-kit'
+
+cn('btn btn-primary', isActive && 'btn-active', className)
+```
+
+---
+
+## Dependency Map
+
+### What the library bundles (you don't need to install these)
+
+| Package | Purpose |
+|---|---|
+| `react-markdown` | Markdown → React rendering |
+| `remark-gfm` | GitHub Flavored Markdown (tables, strikethrough, etc.) |
+| `remark-math` + `rehype-katex` | Math equation rendering |
+| `katex` | KaTeX CSS (auto-imported) |
+| `shiki` | Syntax highlighting for code blocks |
+| `marked` | Markdown tokenizer for block splitting |
+| `use-stick-to-bottom` | Chat container auto-scroll |
+| `react-jsx-parser` | JSX preview runtime rendering |
+| `clsx` + `tailwind-merge` | Class name merging |
+
+### What you provide (peer dependencies)
+
+| Package | Required? | Purpose |
+|---|---|---|
+| `react` >= 19 | **Yes** | — |
+| `react-dom` >= 19 | **Yes** | — |
+| `tailwindcss` >= 4 | **Yes** | CSS framework |
+| `daisyui` >= 5 | **Yes** | Component classes and theming |
+| `@tailwindcss/typography` >= 0.5 | Recommended | `prose` classes for Markdown, MessageContent, ReasoningContent |
+| `@iconify/tailwind4` >= 1 | Recommended | Renders built-in Lucide icon classes |
+| `@iconify-json/lucide` >= 1 | Recommended | Lucide icon data |
+
+---
+
+## Minimal Integration Example
+
+For a project that already uses DaisyUI 5 + Tailwind CSS 4, here is the minimal setup:
+
+### 1. Install
+
+```bash
+pnpm add @daisyui/prompt-kit
+pnpm add -D @tailwindcss/typography @iconify/tailwind4 @iconify-json/lucide
+```
+
+### 2. CSS (globals.css)
+
+```css
+@import "tailwindcss";
+@plugin "@iconify/tailwind4";
+@plugin "@tailwindcss/typography";
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark;
+}
+```
+
+### 3. Use
+
+```tsx
+import {
+  ChatContainerRoot,
+  ChatContainerContent,
+  Message,
+  MessageAvatar,
+  MessageContent,
+  MessageActions,
+  MessageAction,
+  PromptInput,
+  PromptInputTextarea,
+  PromptInputActions,
+  PromptInputAction,
+  ScrollButton,
+  Markdown,
+  CodeBlock,
+  CodeBlockCode,
+  CodeBlockGroup,
+  CodeBlockCopyButton,
+  Reasoning,
+  ReasoningTrigger,
+  ReasoningContent,
+  Tool,
+  Source,
+  SourceTrigger,
+  SourceContent,
+  ThinkingBar,
+  SystemMessage,
+  FeedbackBar,
+  Loader,
+} from '@daisyui/prompt-kit'
+```
+
+That's it. All components will render correctly with your DaisyUI theme colors, and built-in icons, prose styling, and animations will work out of the box.
+
+---
 
 ## Composition Guidance
 
 ### Minimal Chat UI
 
-Use:
-
-- `ChatContainerRoot`
-- `ChatContainerContent`
-- `Message`
-- `PromptInput`
-- `ScrollButton`
+```
+ChatContainerRoot > ChatContainerContent > Message + PromptInput + ScrollButton
+```
 
 ### Rich Assistant Message
 
-Use:
-
-- `Message`
-- `MessageAvatar`
-- `MessageContent markdown`
-- `CodeBlock`
-- `Source`
-- `FeedbackBar`
+```
+Message > MessageAvatar + MessageContent(markdown) + MessageActions > MessageAction
+           + CodeBlock + Source + FeedbackBar
+```
 
 ### Tool-Calling Agent View
 
-Use:
-
-- `Message`
-- `Tool`
-- `Steps`
-- `Reasoning`
-- `ThinkingBar`
+```
+Message + Tool + Steps + Reasoning + ThinkingBar
+```
 
 ### File-Enhanced Composer
 
-Use:
+```
+FileUpload > FileUploadTrigger + FileUploadContent
+  + PromptInput > PromptInputTextarea + PromptInputActions > PromptInputAction
+```
 
-- `FileUpload`
-- `PromptInput`
-- `PromptInputActions`
-- `PromptInputAction`
+---
+
+## Built-in Icons Reference
+
+These Lucide icons are used internally by library components. They require `@iconify/tailwind4` + `@iconify-json/lucide` to be configured in your CSS.
+
+| Icon class | Used by |
+|---|---|
+| `icon-[lucide--copy]` | `CodeBlockCopyButton` |
+| `icon-[lucide--check]` | `CodeBlockCopyButton` |
+| `icon-[lucide--chevron-down]` | `ScrollButton`, `ReasoningTrigger`, `ChainOfThoughtTrigger`, `StepsTrigger`, `Tool` |
+| `icon-[lucide--chevron-right]` | `ThinkingBar` |
+| `icon-[lucide--thumbs-up]` | `FeedbackBar` |
+| `icon-[lucide--thumbs-down]` | `FeedbackBar` |
+| `icon-[lucide--x]` | `FeedbackBar` |
+| `icon-[lucide--info]` | `SystemMessage` (info variant) |
+| `icon-[lucide--circle-check-big]` | `SystemMessage` (success), `Tool` (output-available) |
+| `icon-[lucide--triangle-alert]` | `SystemMessage` (warning) |
+| `icon-[lucide--circle-alert]` | `SystemMessage` (error) |
+| `icon-[lucide--loader-circle]` | `Tool` (input-streaming) |
+| `icon-[lucide--settings-2]` | `Tool` (input-available, default) |
+| `icon-[lucide--circle-x]` | `Tool` (output-error) |
+
+Consumer-provided icons (used in demo pages but not built into components):
+
+| Icon class | Typical usage |
+|---|---|
+| `icon-[lucide--arrow-up]` | Send button in PromptInput |
+| `icon-[lucide--square]` | Stop button in PromptInput |
+| `icon-[lucide--paperclip]` | File attach button |
+| `icon-[lucide--cloud-upload]` | File drop zone |
+| `icon-[lucide--search]`, `icon-[lucide--lightbulb]` | ChainOfThought step icons |
+
+---
 
 ## Demo Project
 
-The companion demo app for this library is expected to run on port `3005`.
-
-Its purpose is to visually verify every exported component before publishing.
-
-## Final Notes
-
-1. Keep the API DaisyUI-native.
-2. Prefer semantic DaisyUI colors over hard-coded Tailwind palette values.
-3. Use composition rather than introducing a second design system.
-4. When in doubt, match the behavior of the original prompt-kit while keeping the implementation idiomatic for DaisyUI and React.
+The companion demo app runs on port `3005` and visually showcases every exported component with live examples.
